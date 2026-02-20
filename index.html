@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CAPM – Frecuencia y Horizonte (Datos reales)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/regression@2.0.1/dist/regression.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h1 { text-align: center; }
+    .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 20px 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+    label { font-weight: bold; }
+    select, button, input { padding: 6px 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #28a745; color: #fff; cursor: pointer; border: none; }
+    button:hover { background: #218838; }
+    .tabs { margin-top: 20px; border-bottom: 1px solid #ddd; display: flex; gap: 8px; }
+    .tab-btn {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      background: #f8f9fa;
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      font-size: 13px;
+      color: #000;
+    }
+    .tab-btn.active {
+      background: #fff;
+      font-weight: bold;
+      color: #000;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .results { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 25px; }
+    .panel { flex: 1 1 380px; background: #fafafa; border-radius: 6px; padding: 15px; border: 1px solid #ddd; }
+    .panel.full { flex: 1 1 500px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: right; }
+    th { background: #e9ecef; text-align: left; }
+    #status { margin-top: 10px; padding: 8px 10px; background: #d1ecf1; border-radius: 4px; font-size: 14px; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    #dataPanel { max-height: 500px; overflow: auto; }
+    #copyBtn { margin-bottom: 8px; float: right; font-size: 12px; padding: 4px 8px; }
+    @media (max-width: 768px) { .controls, .results { flex-direction: column; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Modelo de mercado – Estimación mediante regresión</h1>
+  <p style="font-size: 14px; color: #666;">
+    Finanzas Cuantitativas. &copy; 2026 Francisco Guijarro.
+  </p>
+
+  <div class="controls">
+    <label for="tickerSelect">Activo:</label>
+    <select id="tickerSelect">
+      <option value="AAPL">AAPL (Apple)</option>
+      <option value="AMZN">AMZN (Amazon)</option>
+      <option value="BAC">BAC (Bank of America)</option>
+      <option value="C">C (Citigroup)</option>
+      <option value="COST">COST (Costco)</option>
+      <option value="CVX">CVX (Chevron)</option>
+      <option value="GOOGL">GOOGL (Alphabet)</option>
+      <option value="JPM">JPM (JPMorgan Chase)</option>
+      <option value="KO">KO (Coca-Cola)</option>
+      <option value="MCD">MCD (McDonald's)</option>
+      <option value="META">META (Meta Platforms)</option>
+      <option value="MSFT" selected>MSFT (Microsoft)</option>
+      <option value="NKE">NKE (Nike)</option>
+      <option value="NVDA">NVDA (Nvidia)</option>
+      <option value="PEP">PEP (PepsiCo)</option>
+      <option value="PG">PG (Procter & Gamble)</option>
+      <option value="TSLA">TSLA (Tesla)</option>
+      <option value="UNH">UNH (UnitedHealth)</option>
+      <option value="WMT">WMT (Walmart)</option>
+      <option value="XOM">XOM (Exxon Mobil)</option>
+    </select>
+
+    <label for="freqSelect">Frecuencia:</label>
+    <select id="freqSelect">
+      <option value="1d">Diaria</option>
+      <option value="1wk" selected>Semanal</option>
+      <option value="1mo">Mensual</option>
+    </select>
+
+    <label for="horizonSelect">Horizonte:</label>
+    <select id="horizonSelect">
+      <option value="1">1 año</option>
+      <option value="3">3 años</option>
+      <option value="5" selected>5 años</option>
+    </select>
+
+    <label for="rfInput">Rf anual (%):</label>
+    <input id="rfInput" type="number" value="4.0" step="0.1" style="width:70px;">
+
+    <button id="calcBtn">Calcular</button>
+  </div>
+
+  <div id="status">Listo para calcular.</div>
+
+  <!-- Pestañas -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-resultados">Resultados y gráfico</button>
+    <button class="tab-btn" data-tab="tab-datos">Datos usados</button>
+  </div>
+
+  <!-- Contenido pestaña Resultados -->
+  <div id="tab-resultados" class="tab-content active">
+    <div id="resultsDiv" class="results" style="display:none;">
+      <div class="panel">
+        <h3>Resultados regresión CAPM</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Parámetro</th>
+              <th>Coeficiente</th>
+              <th>Error estándar</th>
+              <th>t‑valor</th>
+              <th>p‑valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Alfa</th>
+              <td id="alphaCoefCell">-</td>
+              <td id="alphaSeCell">-</td>
+              <td id="alphaTCell">-</td>
+              <td id="alphaSigCell">-</td>
+            </tr>
+            <tr>
+              <th>Beta</th>
+              <td id="betaCoefCell">-</td>
+              <td id="betaSeCell">-</td>
+              <td id="betaTCell">-</td>
+              <td id="betaSigCell">-</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size: 12px; color:#666; margin-top:4px;">
+          R² de la regresión: <span id="r2Text">-</span>
+        </p>
+      </div>
+
+      <div class="panel full">
+        <h3>Exceso Ri vs Rm</h3>
+        <canvas id="scatterChart" height="190"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido pestaña Datos -->
+  <div id="tab-datos" class="tab-content">
+    <div id="dataPanel" class="panel">
+      <h3>Datos usados en la regresión</h3>
+      <button id="copyBtn">Copiar datos</button>
+      <p style="font-size: 12px; color:#666; margin-top:4px; margin-bottom:6px;">
+        Formato: Fecha, Rm-Rf, Ri-Rf. Los valores son rendimientos del período seleccionado.
+      </p>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Fecha</th>
+            <th>Rm-Rf</th>
+            <th>Ri-Rf</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- filas generadas por JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let scatterChart = null;
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+// aquí guardaremos los datos usados para poder mostrarlos/copiar
+let lastDataRows = []; // cada fila: {date, rmExcess, riExcess}
+
+function yearsAgoTimestamp(nYears) {
+  const now = new Date();
+  const past = new Date();
+  past.setFullYear(now.getFullYear() - nYears);
+  return Math.floor(past.getTime() / 1000);
+}
+function nowTimestamp() {
+  return Math.floor(Date.now() / 1000);
+}
+function getInterval(freqValue) {
+  return freqValue;
+}
+function formatNumEs(x, dec = 6) {
+  if (!isFinite(x)) return '-';
+  return x.toFixed(dec).replace('.', ',');
+}
+
+async function fetchYahooPrices(symbol, nYears, interval) {
+  const period2 = nowTimestamp();
+  const period1 = yearsAgoTimestamp(nYears);
+  const url = CORS_PROXY + encodeURIComponent(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=${interval}&includeAdjustedClose=true`
+  );
+
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Error HTTP ${resp.status} para ${symbol}`);
+  const data = await resp.json();
+  const result = data.chart?.result?.[0];
+  if (!result) throw new Error('Respuesta inválida para ' + symbol);
+
+  const timestamps = result.timestamp;
+  const ind = result.indicators;
+  if (!timestamps || !ind || !ind.quote || !ind.quote[0]) {
+    throw new Error('Datos incompletos para ' + symbol);
+  }
+  const quote = ind.quote[0];
+  const closes = quote.adjclose || quote.close;
+  if (!closes) throw new Error('Sin precios para ' + symbol);
+
+  const prices = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    const c = closes[i];
+    if (c == null || c <= 0) continue;
+    prices.push({
+      date: new Date(timestamps[i] * 1000),
+      close: c
+    });
+  }
+  prices.sort((a,b) => a.date - b.date);
+  return prices;
+}
+
+function returnsFromPrices(prices) {
+  const rets = [];
+  for (let i = 1; i < prices.length; i++) {
+    const p0 = prices[i-1].close;
+    const p1 = prices[i].close;
+    if (p0 > 0 && p1 > 0) {
+      rets.push({
+        date: prices[i].date,
+        ret: (p1 / p0) - 1
+      });
+    }
+  }
+  return rets;
+}
+
+function mean(arr) {
+  return arr.reduce((a,b)=>a+b,0) / arr.length;
+}
+
+function capmRegression(excessAsset, excessMarket) {
+  const points = excessMarket.map((x,i) => [x, excessAsset[i]]);
+  const reg = regression.linear(points);
+  const beta = reg.equation[0];
+  const alpha = reg.equation[1];
+
+  const x = excessMarket;
+  const y = excessAsset;
+  const n = x.length;
+  const yHat = x.map(xi => alpha + beta * xi);
+  const yMean = mean(y);
+  let ssRes = 0, ssTot = 0;
+  for (let i = 0; i < n; i++) {
+    ssRes += (y[i] - yHat[i])**2;
+    ssTot += (y[i] - yMean)**2;
+  }
+  const r2 = 1 - ssRes/ssTot;
+  const s2 = ssRes / (n - 2);
+  const xMean = mean(x);
+  let sxx = 0;
+  for (let i = 0; i < n; i++) sxx += (x[i] - xMean)**2;
+  const seBeta = Math.sqrt(s2/sxx);
+  const seAlpha = Math.sqrt(s2 * (1/n + xMean**2/sxx));
+  const tAlpha = alpha / seAlpha;
+  const tBeta = beta / seBeta;
+
+  return {alpha, beta, r2, seAlpha, seBeta, tAlpha, tBeta, points};
+}
+
+// CDF normal aproximada
+function normalCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - prob : prob;
+}
+
+// p-valor bilateral aproximado
+function pValueFromT(t) {
+  const a = Math.abs(t);
+  const p = 2 * (1 - normalCdf(a));
+  return p;
+}
+
+function plotScatter(points) {
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+  if (scatterChart) scatterChart.destroy();
+  const xs = points.map(p=>p[0]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const reg = regression.linear(points);
+  const line = [
+    {x: minX, y: reg.predict(minX)[1]},
+    {x: maxX, y: reg.predict(maxX)[1]}
+  ];
+  scatterChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Observaciones (Rm - Rf, Ri - Rf)',
+          data: points.map(p=>({x:p[0], y:p[1]})),
+          backgroundColor: 'rgba(54,162,235,0.7)',
+          pointRadius: 3
+        },
+        {
+          type: 'line',
+          label: 'Recta CAPM',
+          data: line,
+          borderColor: 'rgba(255,99,132,0.95)',
+          pointRadius: 0,
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {position: 'top'},
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const x = ctx.raw.x;
+              const y = ctx.raw.y;
+              return `Rm-Rf: ${ (x*100).toFixed(2) }%, Ri-Rf: ${ (y*100).toFixed(2) }%`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {title: {display:true, text:'Exceso mercado Rm - Rf'}},
+        y: {title: {display:true, text:'Exceso activo Ri - Rf'}}
+      }
+    }
+  });
+}
+
+function formatNum(x, dec=4) {
+  return isFinite(x) ? x.toFixed(dec) : '-';
+}
+function setStatus(msg, isError=false) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = isError ? 'error' : 'success';
+}
+
+// Rellena la tabla de la pestaña "Datos usados"
+function fillDataTable() {
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML = '';
+  lastDataRows.forEach(row => {
+    const tr = document.createElement('tr');
+    const tdDate = document.createElement('td');
+    const tdRm = document.createElement('td');
+    const tdRi = document.createElement('td');
+    tdDate.style.textAlign = 'left';
+    tdDate.textContent = row.date;
+    tdRm.textContent = formatNumEs(row.rmExcess, 6);
+    tdRi.textContent = formatNumEs(row.riExcess, 6);
+    tr.appendChild(tdDate);
+    tr.appendChild(tdRm);
+    tr.appendChild(tdRi);
+    tbody.appendChild(tr);
+  });
+}
+
+// Copia los datos al portapapeles en formato tabulado
+async function copyDataToClipboard() {
+  if (!lastDataRows.length) return;
+  let text = 'Fecha\tRm-Rf\tRi-Rf\n';
+  lastDataRows.forEach(row => {
+    text += `${row.date}\t${formatNumEs(row.rmExcess, 6)}\t${formatNumEs(row.riExcess, 6)}\n`;
+  });
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Datos copiados al portapapeles.');
+  } catch (e) {
+    alert('No se han podido copiar los datos (permiso del navegador).');
+  }
+}
+
+async function runCAPM() {
+  const ticker = document.getElementById('tickerSelect').value;
+  const freq = document.getElementById('freqSelect').value;
+  const horizon = parseInt(document.getElementById('horizonSelect').value, 10);
+  const rfAnnual = parseFloat(document.getElementById('rfInput').value) / 100;
+  const interval = getInterval(freq);
+
+  let perYear;
+  if (freq === '1d') perYear = 252;
+  else if (freq === '1wk') perYear = 52;
+  else perYear = 12;
+  const rfPerPeriod = Math.pow(1 + rfAnnual, 1 / perYear) - 1;
+
+  setStatus('Descargando datos de Yahoo Finance...', false);
+  const resultsDiv = document.getElementById('resultsDiv');
+  resultsDiv.style.display = 'none';
+  lastDataRows = [];
+
+  try {
+    const [assetPrices, marketPrices] = await Promise.all([
+      fetchYahooPrices(ticker, horizon, interval),
+      fetchYahooPrices('SPY', horizon, interval)
+    ]);
+
+    const minLen = Math.min(assetPrices.length, marketPrices.length);
+    if (minLen < 40) throw new Error('Muy pocas observaciones para ese horizonte/frecuencia.');
+
+    const assetRetsAll = returnsFromPrices(assetPrices.slice(0, minLen));
+    const marketRetsAll = returnsFromPrices(marketPrices.slice(0, minLen));
+
+    const nObs = Math.min(assetRetsAll.length, marketRetsAll.length);
+
+    const assetExcess = [];
+    const marketExcess = [];
+    lastDataRows = [];
+
+    for (let i = 0; i < nObs; i++) {
+      const ri = assetRetsAll[i].ret;
+      const rm = marketRetsAll[i].ret;
+      const riEx = ri - rfPerPeriod;
+      const rmEx = rm - rfPerPeriod;
+      assetExcess.push(riEx);
+      marketExcess.push(rmEx);
+      const dateStr = assetRetsAll[i].date.toISOString().slice(0,10);
+      lastDataRows.push({date: dateStr, rmExcess: rmEx, riExcess: riEx});
+    }
+
+    const reg = capmRegression(assetExcess, marketExcess);
+
+    document.getElementById('alphaCoefCell').textContent = formatNum(reg.alpha);
+    document.getElementById('alphaSeCell').textContent   = formatNum(reg.seAlpha);
+    document.getElementById('alphaTCell').textContent    = formatNum(reg.tAlpha, 3);
+    document.getElementById('alphaSigCell').textContent  = formatNum(pValueFromT(reg.tAlpha), 4);
+
+    document.getElementById('betaCoefCell').textContent  = formatNum(reg.beta);
+    document.getElementById('betaSeCell').textContent    = formatNum(reg.seBeta);
+    document.getElementById('betaTCell').textContent     = formatNum(reg.tBeta, 3);
+    document.getElementById('betaSigCell').textContent   = formatNum(pValueFromT(reg.tBeta), 4);
+
+    document.getElementById('r2Text').textContent = formatNum(reg.r2,4);
+
+    plotScatter(reg.points);
+    resultsDiv.style.display = 'flex';
+    fillDataTable(); // rellena tabla de datos
+
+    const freqLabel = (freq === '1d') ? 'diarios' : (freq === '1wk' ? 'semanales' : 'mensuales');
+    setStatus(`CAPM calculado para ${ticker} vs SPY: ${nObs} rendimientos ${freqLabel} en los últimos ${horizon} años.`, false);
+  } catch (err) {
+    console.error(err);
+    setStatus('Error: ' + err.message, true);
+  }
+}
+
+// pestañas
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('calcBtn').addEventListener('click', runCAPM);
+document.getElementById('copyBtn').addEventListener('click', copyDataToClipboard);
+</script>
+</body>
+</html>
