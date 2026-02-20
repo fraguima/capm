@@ -92,6 +92,7 @@
       <option value="1">1 año</option>
       <option value="3">3 años</option>
       <option value="5" selected>5 años</option>
+      <option value="10">10 años</option>
     </select>
 
     <label for="rfInput">Rf anual (%):</label>
@@ -102,6 +103,20 @@
 
   <div id="status">Listo para calcular.</div>
 
+  <div id="subrangeContainer" style="margin-top: 10px; display:none;">
+  <label for="subrangeStart">Subperiodo dentro del horizonte seleccionado:</label>
+  <div>
+    <input type="range" id="subrangeStart" min="0" max="100" value="0" step="1">
+    <input type="range" id="subrangeEnd"   min="0" max="100" value="100" step="1">
+  </div>
+  <div style="font-size: 12px; color:#666;">
+    Desde: <span id="subrangeStartLabel"></span>
+    &nbsp;&nbsp;hasta:&nbsp;
+    <span id="subrangeEndLabel"></span>
+  </div>
+  </div>
+
+  
   <!-- Pestañas -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="tab-resultados">Resultados y gráfico</button>
