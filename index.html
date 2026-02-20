@@ -136,16 +136,16 @@
     }
 
     /* ---- Slider de subperiodo: doble handle en una sola barra ---- */
+    #subrangeContainer label {
+      display: block;
+      margin-bottom: 8px;  /* separa el texto de la barra */
+    }
+    
     .range-wrapper {
       position: relative;
       width: 100%;
       max-width: 420px;
-      margin-top: 16px;
-    }
-    
-    #subrangeContainer label {
-      display: block;
-      margin-bottom: 12px;
+      margin-top: 0;       /* ya no hace falta margen aquí */
     }
 
     .range-wrapper input[type="range"] {
