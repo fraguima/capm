@@ -193,7 +193,7 @@ function nowTimestamp() {
 function getInterval(freqValue) {
   return freqValue;
 }
-function formatNumEs(x, dec = 6) {
+function formatNumEs(x, dec = 4) {
   if (!isFinite(x)) return '-';
   return x.toFixed(dec).replace('.', ',');
 }
@@ -444,12 +444,12 @@ async function runCAPM() {
 
     document.getElementById('alphaCoefCell').textContent = formatNum(reg.alpha);
     document.getElementById('alphaSeCell').textContent   = formatNum(reg.seAlpha);
-    document.getElementById('alphaTCell').textContent    = formatNum(reg.tAlpha, 3);
+    document.getElementById('alphaTCell').textContent    = formatNum(reg.tAlpha, 4);
     document.getElementById('alphaSigCell').textContent  = formatNum(pValueFromT(reg.tAlpha), 4);
 
     document.getElementById('betaCoefCell').textContent  = formatNum(reg.beta);
     document.getElementById('betaSeCell').textContent    = formatNum(reg.seBeta);
-    document.getElementById('betaTCell').textContent     = formatNum(reg.tBeta, 3);
+    document.getElementById('betaTCell').textContent     = formatNum(reg.tBeta, 4);
     document.getElementById('betaSigCell').textContent   = formatNum(pValueFromT(reg.tBeta), 4);
 
     document.getElementById('r2Text').textContent = formatNum(reg.r2,4);
