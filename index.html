@@ -420,7 +420,7 @@ async function runCAPM() {
     ]);
 
     const minLen = Math.min(assetPrices.length, marketPrices.length);
-    if (minLen < 40) throw new Error('Muy pocas observaciones para ese horizonte/frecuencia.');
+    if (minLen < 30) setStatus("Aviso: pocas observaciones (" + minLen + "). Resultados poco robustos.", true);
 
     const assetRetsAll = returnsFromPrices(assetPrices.slice(0, minLen));
     const marketRetsAll = returnsFromPrices(marketPrices.slice(0, minLen));
