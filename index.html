@@ -410,78 +410,204 @@ async function copyDataToClipboard() {
   }
 }
 
+// variable global para poder usar rfPerPeriod dentro del subrango
+let rfPerPeriodGlobal = 0;
+
 async function runCAPM() {
-  const ticker = document.getElementById('tickerSelect').value;
-  const freq = document.getElementById('freqSelect').value;
-  const horizon = parseInt(document.getElementById('horizonSelect').value, 10);
-  const rfAnnual = parseFloat(document.getElementById('rfInput').value) / 100;
+  const ticker  = document.getElementById("tickerSelect").value;
+  const freq    = document.getElementById("freqSelect").value;
+  const horizon = parseInt(document.getElementById("horizonSelect").value, 10);
+  const rfAnnual = parseFloat(document.getElementById("rfInput").value) / 100;
+
   const interval = getInterval(freq);
 
   let perYear;
-  if (freq === '1d') perYear = 252;
-  else if (freq === '1wk') perYear = 52;
-  else perYear = 12;
-  const rfPerPeriod = Math.pow(1 + rfAnnual, 1 / perYear) - 1;
+  if (freq === "1d")      perYear = 252;
+  else if (freq === "1wk") perYear = 52;
+  else                     perYear = 12;
 
-  setStatus('Descargando datos de Yahoo Finance...', false);
-  const resultsDiv = document.getElementById('resultsDiv');
-  resultsDiv.style.display = 'none';
+  const rfPerPeriod = Math.pow(1 + rfAnnual, 1 / perYear) - 1;
+  rfPerPeriodGlobal = rfPerPeriod;
+
+  setStatus("Descargando datos de Yahoo Finance...", false);
+
+  const resultsDiv = document.getElementById("resultsDiv");
+  resultsDiv.style.display = "none";
   lastDataRows = [];
 
   try {
     const [assetPrices, marketPrices] = await Promise.all([
       fetchYahooPrices(ticker, horizon, interval),
-      fetchYahooPrices('SPY', horizon, interval)
+      fetchYahooPrices("SPY",   horizon, interval)
     ]);
 
     const minLen = Math.min(assetPrices.length, marketPrices.length);
-    if (minLen < 30) setStatus("Aviso: pocas observaciones (" + minLen + "). Resultados poco robustos.", true);
 
-    const assetRetsAll = returnsFromPrices(assetPrices.slice(0, minLen));
-    const marketRetsAll = returnsFromPrices(marketPrices.slice(0, minLen));
-
-    const nObs = Math.min(assetRetsAll.length, marketRetsAll.length);
-
-    const assetExcess = [];
-    const marketExcess = [];
-    lastDataRows = [];
-
-    for (let i = 0; i < nObs; i++) {
-      const ri = assetRetsAll[i].ret;
-      const rm = marketRetsAll[i].ret;
-      const riEx = ri - rfPerPeriod;
-      const rmEx = rm - rfPerPeriod;
-      assetExcess.push(riEx);
-      marketExcess.push(rmEx);
-      const dateStr = assetRetsAll[i].date.toISOString().slice(0,10);
-      lastDataRows.push({date: dateStr, rmExcess: rmEx, riExcess: riEx});
+    if (minLen < 3) {
+      setStatus("No hay suficientes datos para ese horizonte/frecuencia.", true);
+      return;
     }
 
-    const reg = capmRegression(assetExcess, marketExcess);
+    const assetRetsAll  = returnsFromPrices(assetPrices.slice(0, minLen));
+    const marketRetsAll = returnsFromPrices(marketPrices.slice(0, minLen));
+    const nObsAll       = Math.min(assetRetsAll.length, marketRetsAll.length);
 
-    document.getElementById('alphaCoefCell').textContent = formatNum(reg.alpha);
-    document.getElementById('alphaSeCell').textContent   = formatNum(reg.seAlpha);
-    document.getElementById('alphaTCell').textContent    = formatNum(reg.tAlpha, 4);
-    document.getElementById('alphaSigCell').textContent  = formatNum(pValueFromT(reg.tAlpha), 4);
+    if (nObsAll < 3) {
+      setStatus("No hay suficientes rendimientos para ese horizonte/frecuencia.", true);
+      return;
+    }
 
-    document.getElementById('betaCoefCell').textContent  = formatNum(reg.beta);
-    document.getElementById('betaSeCell').textContent    = formatNum(reg.seBeta);
-    document.getElementById('betaTCell').textContent     = formatNum(reg.tBeta, 4);
-    document.getElementById('betaSigCell').textContent   = formatNum(pValueFromT(reg.tBeta), 4);
+    // Rango temporal efectivo (intersección de ambos)
+    const startDate =
+      assetRetsAll[0].date < marketRetsAll[0].date
+        ? marketRetsAll[0].date
+        : assetRetsAll[0].date;
 
-    document.getElementById('r2Text').textContent = formatNum(reg.r2,4);
+    const endDate =
+      assetRetsAll[nObsAll - 1].date > marketRetsAll[nObsAll - 1].date
+        ? marketRetsAll[nObsAll - 1].date
+        : assetRetsAll[nObsAll - 1].date;
 
-    plotScatter(reg.points);
-    resultsDiv.style.display = 'flex';
-    fillDataTable(); // rellena tabla de datos
+    const globalStart = startDate.getTime();
+    const globalEnd   = endDate.getTime();
 
-    const freqLabel = (freq === '1d') ? 'diarios' : (freq === '1wk' ? 'semanales' : 'mensuales');
-    setStatus(`CAPM calculado para ${ticker} vs SPY: ${nObs} rendimientos ${freqLabel} en los últimos ${horizon} años.`, false);
+    // Mostrar contenedor del subrango
+    const subDiv   = document.getElementById("subrangeContainer");
+    const subStart = document.getElementById("subrangeStart");
+    const subEnd   = document.getElementById("subrangeEnd");
+    subDiv.style.display = "block";
+    subStart.value = 0;
+    subEnd.value   = 100;
+
+    function updateSubrangeLabels() {
+      let s = parseInt(subStart.value, 10);
+      let e = parseInt(subEnd.value, 10);
+      if (s > e) {
+        const tmp = s;
+        s = e;
+        e = tmp;
+        subStart.value = s;
+        subEnd.value   = e;
+      }
+      const tStart = globalStart + (globalEnd - globalStart) * (s / 100);
+      const tEnd   = globalStart + (globalEnd - globalStart) * (e / 100);
+      const dStart = new Date(tStart);
+      const dEnd   = new Date(tEnd);
+      document.getElementById("subrangeStartLabel").textContent =
+        dStart.toISOString().slice(0, 10);
+      document.getElementById("subrangeEndLabel").textContent   =
+        dEnd.toISOString().slice(0, 10);
+    }
+
+    updateSubrangeLabels();
+
+    // función que recalcula todo el CAPM en función del subperiodo
+    function recomputeCAPMWithSubrange() {
+      let s = parseInt(subStart.value, 10);
+      let e = parseInt(subEnd.value, 10);
+      if (s > e) {
+        const tmp = s;
+        s = e;
+        e = tmp;
+        subStart.value = s;
+        subEnd.value   = e;
+      }
+
+      const tStart = globalStart + (globalEnd - globalStart) * (s / 100);
+      const tEnd   = globalStart + (globalEnd - globalStart) * (e / 100);
+
+      const assetExcess  = [];
+      const marketExcess = [];
+      lastDataRows       = [];
+
+      for (let i = 0; i < assetRetsAll.length; i++) {
+        const d = assetRetsAll[i].date;
+        const t = d.getTime();
+
+        if (t < tStart || t > tEnd) continue;
+
+        const ri = assetRetsAll[i].ret;
+        const rm = marketRetsAll[i].ret;
+
+        const riEx = ri - rfPerPeriodGlobal;
+        const rmEx = rm - rfPerPeriodGlobal;
+
+        assetExcess.push(riEx);
+        marketExcess.push(rmEx);
+
+        const dateStr = d.toISOString().slice(0, 10);
+        lastDataRows.push({
+          date: dateStr,
+          rmExcess: rmEx,
+          riExcess: riEx
+        });
+      }
+
+      const nObs = assetExcess.length;
+      if (nObs < 3) {
+        setStatus("Aviso: subperiodo con muy pocas observaciones (" + nObs + ").", true);
+        return;
+      }
+
+      if (nObs < 40) {
+        setStatus(
+          "Aviso: pocas observaciones en el subperiodo (" +
+            nObs +
+            "). Resultados poco robustos.",
+          true
+        );
+      } else {
+        setStatus("CAPM calculado para el subperiodo seleccionado (" + nObs + " observaciones).", false);
+      }
+
+      const reg = capmRegression(assetExcess, marketExcess);
+
+      document.getElementById("alphaCoefCell").textContent = formatNum(reg.alpha);
+      document.getElementById("alphaSeCell").textContent   = formatNum(reg.seAlpha);
+      document.getElementById("alphaTCell").textContent    = formatNum(reg.tAlpha, 4);
+      document.getElementById("alphaSigCell").textContent  = formatNum(pValueFromT(reg.tAlpha), 4);
+
+      document.getElementById("betaCoefCell").textContent  = formatNum(reg.beta);
+      document.getElementById("betaSeCell").textContent    = formatNum(reg.seBeta);
+      document.getElementById("betaTCell").textContent     = formatNum(reg.tBeta, 4);
+      document.getElementById("betaSigCell").textContent   = formatNum(pValueFromT(reg.tBeta), 4);
+
+      document.getElementById("r2Text").textContent        = formatNum(reg.r2, 4);
+
+      plotScatter(reg.points);
+      fillDataTable();
+
+      resultsDiv.style.display = "flex";
+    }
+
+    // recalcular al mover los sliders
+    subStart.oninput = subEnd.oninput = function () {
+      updateSubrangeLabels();
+      recomputeCAPMWithSubrange();
+    };
+
+    // cálculo inicial con todo el rango seleccionado (0–100)
+    recomputeCAPMWithSubrange();
+
+    const freqLabel =
+      freq === "1d" ? "diarios" : (freq === "1wk" ? "semanales" : "mensuales");
+
+    setStatus(
+      "CAPM calculado para " +
+        ticker +
+        " vs SPY con rendimientos " +
+        freqLabel +
+        " en los últimos " +
+        horizon +
+        " años.",
+      false
+    );
   } catch (err) {
     console.error(err);
-    setStatus('Error: ' + err.message, true);
+    setStatus("Error: " + err.message, true);
   }
 }
+
 
 // pestañas
 document.querySelectorAll('.tab-btn').forEach(btn => {
