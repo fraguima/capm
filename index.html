@@ -254,7 +254,7 @@ function mean(arr) {
 
 function capmRegression(excessAsset, excessMarket) {
   const points = excessMarket.map((x,i) => [x, excessAsset[i]]);
-  const reg = regression.linear(points);
+  const reg = regression.linear(points, { precision: 10 });
   const beta = reg.equation[0];
   const alpha = reg.equation[1];
 
