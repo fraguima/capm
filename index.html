@@ -336,7 +336,7 @@ function plotScatter(points) {
             label: ctx => {
               const x = ctx.raw.x;
               const y = ctx.raw.y;
-              return `Rm-Rf: ${ (x*100).toFixed(2) }%, Ri-Rf: ${ (y*100).toFixed(2) }%`;
+              return `Rm-Rf: ${ (x*100).toFixed(4) }%, Ri-Rf: ${ (y*100).toFixed(4) }%`;
             }
           }
         }
