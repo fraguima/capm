@@ -389,8 +389,8 @@
       const tdRi   = document.createElement("td");
       tdDate.style.textAlign = "left";
       tdDate.textContent = row.date;
-      tdRm.textContent   = formatNumEs(row.rmExcess, 6);
-      tdRi.textContent   = formatNumEs(row.riExcess, 6);
+      tdRm.textContent   = formatNumEs(row.rmExcess, 10);
+      tdRi.textContent   = formatNumEs(row.riExcess, 10);
       tr.appendChild(tdDate); tr.appendChild(tdRm); tr.appendChild(tdRi);
       tbody.appendChild(tr);
     });
@@ -400,7 +400,7 @@
     if (!lastDataRows.length) return;
     let text = "Fecha\tRm-Rf\tRi-Rf\n";
     lastDataRows.forEach(row => {
-      text += row.date + "\t" + formatNumEs(row.rmExcess, 6) + "\t" + formatNumEs(row.riExcess, 6) + "\n";
+      text += row.date + "\t" + formatNumEs(row.rmExcess, 10) + "\t" + formatNumEs(row.riExcess, 10) + "\n";
     });
     try { await navigator.clipboard.writeText(text); alert("Datos copiados al portapapeles."); }
     catch (e) { alert("No se han podido copiar los datos (permiso del navegador)."); }
