@@ -288,10 +288,16 @@
     for (let i = 1; i < prices.length; i++) {
       const p0 = prices[i-1].close, p1 = prices[i].close;
       if (p0 === 0 || p1 === 0) continue;
-      rets.push({ date: prices[i].date, ret: (p1 / p0) - 1 });
+      // Normaliza a YYYY-MM-DD en hora local para evitar desfases UTC
+      const d = prices[i].date;
+      const dateKey = d.getFullYear() + '-'
+        + String(d.getMonth() + 1).padStart(2, '0') + '-'
+        + String(d.getDate()).padStart(2, '0');
+      rets.push({ date: prices[i].date, dateKey, ret: (p1 / p0) - 1 });
     }
     return rets;
   }
+
 
   function mean(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
 
@@ -475,7 +481,7 @@
           const rm = marketRetsAll[i].ret;
           assetExcess.push(ri - rfPerPeriodGlobal);
           marketExcess.push(rm - rfPerPeriodGlobal);
-          lastDataRows.push({ date: d.toISOString().slice(0,10), rmExcess: rm - rfPerPeriodGlobal, riExcess: ri - rfPerPeriodGlobal });
+          lastDataRows.push({ date: assetRetsAll[i].dateKey, rmExcess: rm - rfPerPeriodGlobal, riExcess: ri - rfPerPeriodGlobal });
         }
         const nObs = assetExcess.length;
         if (nObs < 3) { setStatus("Aviso: subperiodo con muy pocas observaciones (" + nObs + ").", true); return; }
@@ -564,7 +570,7 @@
       if (!prices || prices.length < 2) { allRets[symbol] = new Map(); continue; }
       const rets = returnsFromPrices(prices);
       const m    = new Map();
-      rets.forEach(r => m.set(r.date.toISOString().slice(0, 10), r.ret - rfPerPeriod));
+      rets.forEach(r => m.set(r.dateKey, r.ret - rfPerPeriod));
       allRets[symbol] = m;
       if (symbol === "SPY" && rets.length > 0) {
         refStart = rets[0].date.getTime();
