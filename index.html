@@ -60,7 +60,7 @@
     .infl-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
     .infl-table th, .infl-table td { border: 1px solid #ddd; padding: 3px 6px; text-align: right; }
     .infl-table th { background: #e9ecef; text-align: left; }
-    .infl-table td.infl-date { text-align: left; }
+    .infl-table td.infl-date  { text-align: left; }
     .infl-table td.infl-check { text-align: center; }
     .infl-section-title { font-size: 12px; font-weight: bold; color: #444; margin: 10px 0 4px 0; }
     .excl-row { background: #fff3cd; }
@@ -141,8 +141,8 @@
   <div id="tab-resultados" class="tab-content active">
     <div id="resultsDiv" class="results" style="display:none;">
 
-      <!-- Columna izquierda: regresión + puntos influyentes -->
-      <div class="panel" style="flex: 1 1 420px;">
+      <!-- Columna izquierda -->
+      <div class="panel" style="flex:1 1 420px;">
         <h3>Resultados regresión CAPM</h3>
         <table id="capmTable">
           <thead>
@@ -169,25 +169,40 @@
         <div id="influentialPanel">
           <h4>Puntos influyentes</h4>
           <p class="infl-note">
-            Para cada parámetro se muestran las 3 observaciones cuya exclusión provoca
-            el mayor cambio en valor absoluto. Desmarca una fila para excluirla del cálculo.
+            Las 3 observaciones cuya exclusión provoca mayor cambio en cada parámetro (leave-one-out).
+            Desmarca para excluirlas del cálculo; vuelve a marcar para reincluirlas.
           </p>
 
           <div class="infl-section-title">Influencia sobre Alfa</div>
           <table class="infl-table" id="inflAlphaTable">
-            <thead><tr><th>Incl.</th><th class="infl-date">Fecha</th><th>Alfa sin obs.</th><th>Δ Alfa</th></tr></thead>
+            <thead><tr>
+              <th style="text-align:center;">Incl.</th>
+              <th class="infl-date">Fecha</th>
+              <th>Alfa sin obs.</th>
+              <th>Δ Alfa</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
 
           <div class="infl-section-title">Influencia sobre Beta</div>
           <table class="infl-table" id="inflBetaTable">
-            <thead><tr><th>Incl.</th><th class="infl-date">Fecha</th><th>Beta sin obs.</th><th>Δ Beta</th></tr></thead>
+            <thead><tr>
+              <th style="text-align:center;">Incl.</th>
+              <th class="infl-date">Fecha</th>
+              <th>Beta sin obs.</th>
+              <th>Δ Beta</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
 
           <div class="infl-section-title">Influencia sobre R²</div>
           <table class="infl-table" id="inflR2Table">
-            <thead><tr><th>Incl.</th><th class="infl-date">Fecha</th><th>R² sin obs.</th><th>Δ R²</th></tr></thead>
+            <thead><tr>
+              <th style="text-align:center;">Incl.</th>
+              <th class="infl-date">Fecha</th>
+              <th>R² sin obs.</th>
+              <th>Δ R²</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -249,12 +264,8 @@ let globalEnd         = null;
 let rfPerPeriodGlobal = 0;
 let allRetsCache      = {};
 let cacheParams       = { freq: null, horizon: null };
-
-// Conjunto de fechas excluidas manualmente por el usuario
-let excludedDates = new Set();
-
-// Datos completos del subperiodo actual (antes de exclusiones)
-let fullSubperiodRows = [];  // { dateKey, rmExcess, riExcess }
+let excludedDates     = new Set();
+let fullSubperiodRows = [];
 
 const CORSPROXY = "https://corsproxy.io/?";
 
@@ -383,68 +394,72 @@ function normalCdf(z) {
 function pValueFromT(t) { return 2*(1-normalCdf(Math.abs(t))); }
 
 /* ================================================================
-   PUNTOS INFLUYENTES
-   Mide la influencia de cada observación por leave-one-out:
-   para cada obs i, recalcula el parámetro sin ella y calcula |Δ|.
+   PUNTOS INFLUYENTES  (leave-one-out)
 ================================================================ */
 function computeInfluential(rows, baseAlpha, baseBeta, baseR2, topN=3) {
   const n = rows.length;
-  const influenceAlpha = [], influenceBeta = [], influenceR2 = [];
-
+  const iAlpha=[], iBeta=[], iR2=[];
   for (let i=0; i<n; i++) {
     const xArr=[], yArr=[];
-    for (let j=0; j<n; j++) {
+    for (let j=0;j<n;j++) {
       if (j===i) continue;
       xArr.push(rows[j].rmExcess);
       yArr.push(rows[j].riExcess);
     }
     if (xArr.length < 3) continue;
     const reg = capmRegression(yArr, xArr);
-    influenceAlpha.push({ dateKey:rows[i].dateKey, val:reg.alpha, delta:reg.alpha-baseAlpha, absDelta:Math.abs(reg.alpha-baseAlpha) });
-    influenceBeta.push ({ dateKey:rows[i].dateKey, val:reg.beta,  delta:reg.beta-baseBeta,   absDelta:Math.abs(reg.beta-baseBeta)   });
-    influenceR2.push   ({ dateKey:rows[i].dateKey, val:reg.r2,    delta:reg.r2-baseR2,       absDelta:Math.abs(reg.r2-baseR2)       });
+    iAlpha.push({ dateKey:rows[i].dateKey, val:reg.alpha, delta:reg.alpha-baseAlpha, absDelta:Math.abs(reg.alpha-baseAlpha) });
+    iBeta.push ({ dateKey:rows[i].dateKey, val:reg.beta,  delta:reg.beta-baseBeta,   absDelta:Math.abs(reg.beta-baseBeta)   });
+    iR2.push   ({ dateKey:rows[i].dateKey, val:reg.r2,    delta:reg.r2-baseR2,       absDelta:Math.abs(reg.r2-baseR2)       });
   }
-
   const top = arr => [...arr].sort((a,b)=>b.absDelta-a.absDelta).slice(0,topN);
-  return { alpha: top(influenceAlpha), beta: top(influenceBeta), r2: top(influenceR2) };
+  return { alpha:top(iAlpha), beta:top(iBeta), r2:top(iR2) };
 }
 
-/* ================================================================
-   RENDER TABLA DE PUNTOS INFLUYENTES
-================================================================ */
-function renderInflTable(tableId, items, baseVal, onToggle) {
+/* Renderizado INICIAL de la tabla: construye las filas desde cero */
+function renderInflTable(tableId, items, onToggle) {
   const tbody = document.querySelector("#"+tableId+" tbody");
   tbody.innerHTML = "";
   items.forEach(item => {
-    const excluded = excludedDates.has(item.dateKey);
     const tr = document.createElement("tr");
-    if (excluded) tr.classList.add("excl-row");
+    tr.dataset.date = item.dateKey;
     tr.innerHTML = `
       <td class="infl-check">
-        <input type="checkbox" ${excluded ? "" : "checked"}
-               data-date="${item.dateKey}" class="infl-chk">
+        <input type="checkbox" checked data-date="${item.dateKey}" class="infl-chk">
       </td>
       <td class="infl-date">${item.dateKey}</td>
-      <td>${formatNum(item.val, 4)}</td>
-      <td>${(item.delta >= 0 ? "+" : "") + formatNum(item.delta, 4)}</td>
+      <td class="infl-val">${formatNum(item.val,4)}</td>
+      <td class="infl-delta">${(item.delta>=0?"+":"")+formatNum(item.delta,4)}</td>
     `;
     tbody.appendChild(tr);
-  });
-  // Eventos checkbox
-  tbody.querySelectorAll(".infl-chk").forEach(chk => {
-    chk.addEventListener("change", () => {
-      const dk = chk.dataset.date;
-      if (chk.checked) excludedDates.delete(dk);
-      else             excludedDates.add(dk);
+    tr.querySelector(".infl-chk").addEventListener("change", () => {
+      if (tr.querySelector(".infl-chk").checked) {
+        excludedDates.delete(item.dateKey);
+        tr.classList.remove("excl-row");
+      } else {
+        excludedDates.add(item.dateKey);
+        tr.classList.add("excl-row");
+      }
       onToggle();
     });
+  });
+}
+
+/* Actualización de valores NUMÉRICOS sin tocar checkboxes ni filas */
+function updateInflValues(tableId, items) {
+  const tbody = document.querySelector("#"+tableId+" tbody");
+  items.forEach(item => {
+    const tr = tbody.querySelector(`tr[data-date="${item.dateKey}"]`);
+    if (!tr) return;
+    tr.querySelector(".infl-val").textContent   = formatNum(item.val,4);
+    tr.querySelector(".infl-delta").textContent = (item.delta>=0?"+":"")+formatNum(item.delta,4);
   });
 }
 
 /* ================================================================
    GRÁFICO
 ================================================================ */
-function plotScatter(points, highlightDates=[]) {
+function plotScatter(points) {
   const ctx = document.getElementById("scatterChart").getContext("2d");
   if (scatterChart) scatterChart.destroy();
   const xs = points.map(p=>p[0]);
@@ -455,20 +470,21 @@ function plotScatter(points, highlightDates=[]) {
     { x:maxX, y:reg.predict(maxX)[1] }
   ];
   scatterChart = new Chart(ctx, {
-    type: "scatter",
-    data: {
-      datasets: [
-        { label:"Incluidas", data:points.map(p=>({x:p[0],y:p[1]})),
+    type:"scatter",
+    data:{
+      datasets:[
+        { label:"Incluidas",
+          data:points.map(p=>({x:p[0],y:p[1]})),
           backgroundColor:"rgba(54,162,235,0.7)", pointRadius:3 },
         { type:"line", label:"Recta CAPM", data:line,
           borderColor:"rgba(255,99,132,0.95)", pointRadius:0, borderWidth:2 }
       ]
     },
-    options: {
+    options:{
       responsive:true,
       plugins:{
         legend:{position:"top"},
-        tooltip:{callbacks:{label:ctx=>`Rm‑Rf: ${(ctx.raw.x*100).toFixed(4)}%,  Ri‑Rf: ${(ctx.raw.y*100).toFixed(4)}%`}}
+        tooltip:{callbacks:{label:c=>`Rm‑Rf: ${(c.raw.x*100).toFixed(4)}%,  Ri‑Rf: ${(c.raw.y*100).toFixed(4)}%`}}
       },
       scales:{
         x:{title:{display:true,text:"Exceso mercado (Rm − Rf)"}},
@@ -489,7 +505,7 @@ function fillDataTable() {
     ["date","rmExcess","riExcess"].forEach((k,i) => {
       const td = document.createElement("td");
       if (i===0) { td.style.textAlign="left"; td.textContent=row[k]; }
-      else        td.textContent = formatNumEs(row[k], 10);
+      else        td.textContent=formatNumEs(row[k],10);
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
@@ -499,7 +515,7 @@ function fillDataTable() {
 async function copyDataToClipboard() {
   if (!lastDataRows.length) return;
   let text="Fecha\tRm-Rf\tRi-Rf\n";
-  lastDataRows.forEach(r => {
+  lastDataRows.forEach(r=>{
     text+=r.date+"\t"+formatNumEs(r.rmExcess,10)+"\t"+formatNumEs(r.riExcess,10)+"\n";
   });
   try   { await navigator.clipboard.writeText(text); alert("Datos copiados al portapapeles."); }
@@ -512,7 +528,8 @@ function setStatus(msg, isError=false) {
 }
 
 /* ================================================================
-   RECALCULAR CAPM  (respeta excludedDates)
+   RECALCULAR con exclusiones activas
+   (no reconstruye las tablas, solo actualiza valores)
 ================================================================ */
 function recalcWithExclusions() {
   const activeRows = fullSubperiodRows.filter(r => !excludedDates.has(r.dateKey));
@@ -538,40 +555,40 @@ function recalcWithExclusions() {
   lastDataRows = activeRows.map(r=>({ date:r.dateKey, rmExcess:r.rmExcess, riExcess:r.riExcess }));
   fillDataTable();
 
-  // Actualizar tablas de influencia con los nuevos valores base
+  // Solo actualiza los valores numéricos, NO reconstruye las tablas
   const infl = computeInfluential(activeRows, reg.alpha, reg.beta, reg.r2);
-  renderInflTable("inflAlphaTable", infl.alpha, reg.alpha, recalcWithExclusions);
-  renderInflTable("inflBetaTable",  infl.beta,  reg.beta,  recalcWithExclusions);
-  renderInflTable("inflR2Table",    infl.r2,    reg.r2,    recalcWithExclusions);
+  updateInflValues("inflAlphaTable", infl.alpha);
+  updateInflValues("inflBetaTable",  infl.beta);
+  updateInflValues("inflR2Table",    infl.r2);
 }
 
 /* ================================================================
    runCAPM
 ================================================================ */
 async function runCAPM() {
-  const ticker   = document.getElementById("tickerSelect").value;
-  const freq     = document.getElementById("freqSelect").value;
-  const horizon  = parseInt(document.getElementById("horizonSelect").value, 10);
-  const interval = freq;
+  const ticker      = document.getElementById("tickerSelect").value;
+  const freq        = document.getElementById("freqSelect").value;
+  const horizon     = parseInt(document.getElementById("horizonSelect").value, 10);
+  const interval    = freq;
   const rfPerPeriod = getRfPerPeriod();
   rfPerPeriodGlobal = rfPerPeriod;
 
   setStatus("Descargando datos de Yahoo Finance...", false);
-  document.getElementById("resultsDiv").style.display = "none";
+  document.getElementById("resultsDiv").style.display       = "none";
   document.getElementById("influentialPanel").style.display = "none";
-  lastDataRows = []; fullSubperiodRows = []; excludedDates.clear();
+  lastDataRows=[]; fullSubperiodRows=[]; excludedDates.clear();
 
   if (cacheParams.freq!==freq || cacheParams.horizon!==horizon) {
-    allRetsCache={}; cacheParams={ freq, horizon };
+    allRetsCache={}; cacheParams={freq,horizon};
   }
 
   try {
     const needSPY    = !allRetsCache["SPY"];
     const needTicker = !allRetsCache[ticker];
     const fetches=[];
-    if (needSPY)    fetches.push(fetchYahooPrices("SPY",  horizon, interval));
-    if (needTicker) fetches.push(fetchYahooPrices(ticker, horizon, interval));
-    const results = await Promise.all(fetches);
+    if (needSPY)    fetches.push(fetchYahooPrices("SPY",   horizon, interval));
+    if (needTicker) fetches.push(fetchYahooPrices(ticker,  horizon, interval));
+    const results=await Promise.all(fetches);
     let ri=0;
     if (needSPY)    allRetsCache["SPY"]   = pricesToRetMap(results[ri++]);
     if (needTicker) allRetsCache[ticker]  = pricesToRetMap(results[ri++]);
@@ -608,25 +625,24 @@ async function runCAPM() {
       const tS=globalStart+(globalEnd-globalStart)*(s/100);
       const tE=globalStart+(globalEnd-globalStart)*(e/100);
 
-      // Reconstruir fullSubperiodRows SIN aplicar exclusiones
+      // Reconstruir subperiodo completo y limpiar exclusiones
       fullSubperiodRows=[];
       excludedDates.clear();
       for (const dk of commonDates) {
         const t=new Date(dk).getTime();
         if(t<tS||t>tE) continue;
         fullSubperiodRows.push({
-          dateKey: dk,
+          dateKey:  dk,
           rmExcess: mapSPY.get(dk)    - rfPerPeriodGlobal,
           riExcess: mapTicker.get(dk) - rfPerPeriodGlobal
         });
       }
 
       const nObs=fullSubperiodRows.length;
-      if(nObs<3) { setStatus("Aviso: muy pocas observaciones ("+nObs+").",true); return; }
-      if(nObs<40) setStatus("Aviso: pocas observaciones ("+nObs+"). Resultados poco robustos.",true);
-      else        setStatus("CAPM calculado para el subperiodo ("+nObs+" observaciones).",false);
+      if(nObs<3)  { setStatus("Aviso: muy pocas observaciones ("+nObs+").",true); return; }
+      if(nObs<40)   setStatus("Aviso: pocas observaciones ("+nObs+"). Resultados poco robustos.",true);
+      else          setStatus("CAPM calculado para el subperiodo ("+nObs+" observaciones).",false);
 
-      // Calcular con todas las observaciones
       const xArr=fullSubperiodRows.map(r=>r.rmExcess);
       const yArr=fullSubperiodRows.map(r=>r.riExcess);
       const reg=capmRegression(yArr, xArr);
@@ -642,14 +658,15 @@ async function runCAPM() {
       document.getElementById("r2Text").textContent        = formatNum(reg.r2,4);
       plotScatter(reg.points);
 
-      lastDataRows = fullSubperiodRows.map(r=>({ date:r.dateKey, rmExcess:r.rmExcess, riExcess:r.riExcess }));
+      lastDataRows=fullSubperiodRows.map(r=>({ date:r.dateKey, rmExcess:r.rmExcess, riExcess:r.riExcess }));
       fillDataTable();
 
-      // Puntos influyentes (leave-one-out)
+      // Construir tablas de puntos influyentes desde cero (nuevo subperiodo)
       const infl = computeInfluential(fullSubperiodRows, reg.alpha, reg.beta, reg.r2);
-      renderInflTable("inflAlphaTable", infl.alpha, reg.alpha, recalcWithExclusions);
-      renderInflTable("inflBetaTable",  infl.beta,  reg.beta,  recalcWithExclusions);
-      renderInflTable("inflR2Table",    infl.r2,    reg.r2,    recalcWithExclusions);
+      renderInflTable("inflAlphaTable", infl.alpha, recalcWithExclusions);
+      renderInflTable("inflBetaTable",  infl.beta,  recalcWithExclusions);
+      renderInflTable("inflR2Table",    infl.r2,    recalcWithExclusions);
+
       document.getElementById("influentialPanel").style.display="block";
       document.getElementById("resultsDiv").style.display="flex";
     }
@@ -661,7 +678,7 @@ async function runCAPM() {
     const freqLabel=freq==="1d"?"diarios":freq==="1wk"?"semanales":"mensuales";
     setStatus("CAPM calculado para "+ticker+" vs SPY · rendimientos "+freqLabel+" · últimos "+horizon+" años.",false);
 
-  } catch(err) { console.error(err); setStatus("Error: "+err.message, true); }
+  } catch(err) { console.error(err); setStatus("Error: "+err.message,true); }
 }
 
 /* ================================================================
@@ -678,12 +695,12 @@ function corrFg(r) { return Math.abs(r)>0.55?"#fff":"#333"; }
    calcCorr
 ================================================================ */
 async function calcCorr() {
-  const freq     = document.getElementById("freqSelect").value;
-  const horizon  = parseInt(document.getElementById("horizonSelect").value,10);
-  const interval = freq;
+  const freq        = document.getElementById("freqSelect").value;
+  const horizon     = parseInt(document.getElementById("horizonSelect").value,10);
+  const interval    = freq;
   const rfPerPeriod = getRfPerPeriod();
 
-  if(cacheParams.freq!==freq||cacheParams.horizon!==horizon) {
+  if(cacheParams.freq!==freq||cacheParams.horizon!==horizon){
     allRetsCache={}; cacheParams={freq,horizon};
   }
 
@@ -695,7 +712,9 @@ async function calcCorr() {
   const e=Math.max(+document.getElementById("subrangeStart").value, +document.getElementById("subrangeEnd").value);
 
   const toFetch=ALL_TICKERS.map(t=>t.symbol).filter(sym=>!allRetsCache[sym]);
-  corrStatus.textContent=toFetch.length>0 ? `Descargando ${toFetch.length} activos pendientes...` : "Todos los datos en caché. Calculando...";
+  corrStatus.textContent=toFetch.length>0
+    ? `Descargando ${toFetch.length} activos pendientes...`
+    : "Todos los datos en caché. Calculando...";
 
   const batchSize=5;
   for(let i=0;i<toFetch.length;i+=batchSize){
@@ -706,7 +725,7 @@ async function calcCorr() {
   }
 
   let refStart=globalStart, refEnd=globalEnd;
-  if(refStart===null && allRetsCache["SPY"]) {
+  if(refStart===null && allRetsCache["SPY"]){
     const keys=[...allRetsCache["SPY"].keys()].sort();
     refStart=new Date(keys[0]).getTime();
     refEnd  =new Date(keys[keys.length-1]).getTime();
