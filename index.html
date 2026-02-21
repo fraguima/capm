@@ -16,7 +16,7 @@
     button:hover { background: #218838; }
     .tabs { margin-top: 20px; border-bottom: 1px solid #ddd; display: flex; gap: 8px; }
     .tab-btn { padding: 6px 12px; border: 1px solid #ddd; border-bottom: none; background: #f8f9fa; cursor: pointer; border-radius: 4px 4px 0 0; font-size: 13px; color: #000; }
-    .tab-btn.active { background: #fff; font-weight: bold; color: #000; }
+    .tab-btn.active { background: #fff; font-weight: bold; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .results { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 25px; }
@@ -32,21 +32,19 @@
     #copyBtn { margin-bottom: 8px; float: right; font-size: 12px; padding: 4px 8px; }
     @media (max-width: 768px) { .controls, .results { flex-direction: column; } }
 
-    /* ---- Slider de subperiodo ---- */
+    /* ---- Slider subperiodo ---- */
     #subrangeContainer label { display: block; margin-bottom: 8px; }
     .range-wrapper { position: relative; width: 100%; max-width: 420px; height: 24px; margin-top: 0; }
     .range-wrapper input[type="range"] { position: absolute; left: 0; right: 0; width: 100%; pointer-events: none; background: none; }
-    .range-wrapper input[type="range"]::-webkit-slider-thumb { pointer-events: auto; }
-    .range-wrapper input[type="range"]::-moz-range-thumb { pointer-events: auto; }
+    .range-wrapper input[type="range"]::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #007bff; border: 2px solid #fff; box-shadow: 0 0 0 1px #007bff; margin-top: -4px; }
+    .range-wrapper input[type="range"]::-moz-range-thumb { pointer-events: auto; height: 14px; width: 14px; border-radius: 50%; background: #007bff; border: 2px solid #fff; box-shadow: 0 0 0 1px #007bff; }
     .range-wrapper input[type="range"]::-webkit-slider-runnable-track { height: 6px; background: #ddd; border-radius: 3px; }
     .range-wrapper input[type="range"]::-moz-range-track { height: 6px; background: #ddd; border-radius: 3px; }
-    .range-wrapper input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #007bff; border: 2px solid #fff; box-shadow: 0 0 0 1px #007bff; margin-top: -4px; }
-    .range-wrapper input[type="range"]::-moz-range-thumb { height: 14px; width: 14px; border-radius: 50%; background: #007bff; border: 2px solid #fff; box-shadow: 0 0 0 1px #007bff; }
     #subrangeEnd { --val-start: 0; --val-end: 100; }
     #subrangeEnd::-webkit-slider-runnable-track { background: linear-gradient(to right, #ddd 0%, #ddd calc(var(--val-start) * 1%), #90caf9 calc(var(--val-start) * 1%), #90caf9 calc(var(--val-end) * 1%), #ddd calc(var(--val-end) * 1%), #ddd 100%); }
-    #subrangeEnd::-moz-range-track { background: linear-gradient(to right, #ddd 0%, #ddd calc(var(--val-start) * 1%), #90caf9 calc(var(--val-start) * 1%), #90caf9 calc(var(--val-end) * 1%), #ddd calc(var(--val-end) * 1%), #ddd 100%); }
+    #subrangeEnd::-moz-range-track    { background: linear-gradient(to right, #ddd 0%, #ddd calc(var(--val-start) * 1%), #90caf9 calc(var(--val-start) * 1%), #90caf9 calc(var(--val-end) * 1%), #ddd calc(var(--val-end) * 1%), #ddd 100%); }
 
-    /* ---- Matriz de correlaciones ---- */
+    /* ---- Matriz correlaciones ---- */
     .corr-scroll { overflow: auto; max-width: 100%; margin-top: 12px; }
     .corr-table { border-collapse: collapse; font-size: 11px; }
     .corr-table th, .corr-table td { border: 1px solid #ccc; padding: 4px 7px; text-align: center; min-width: 58px; white-space: nowrap; }
@@ -59,7 +57,7 @@
 <body>
 <div class="container">
   <h1>Modelo de mercado. Estimación mediante regresión</h1>
-  <p style="font-size: 14px; color: #666;">Finanzas Cuantitativas. &copy; 2026 Francisco Guijarro.</p>
+  <p style="font-size:14px;color:#666;">Finanzas Cuantitativas. &copy; 2026 Francisco Guijarro.</p>
 
   <div class="controls">
     <label for="tickerSelect">Activo</label>
@@ -79,7 +77,7 @@
       <option value="NKE">NKE Nike</option>
       <option value="NVDA">NVDA Nvidia</option>
       <option value="PEP">PEP PepsiCo</option>
-      <option value="PG">PG Procter Gamble</option>
+      <option value="PG">PG Procter &amp; Gamble</option>
       <option value="TSLA">TSLA Tesla</option>
       <option value="UNH">UNH UnitedHealth</option>
       <option value="WMT">WMT Walmart</option>
@@ -111,17 +109,16 @@
 
   <div id="status" class="status">Listo para calcular.</div>
 
-  <!-- Barra de subperiodo -->
+  <!-- Slider subperiodo -->
   <div id="subrangeContainer" style="display:none;">
     <label for="subrangeStart">Subperiodo dentro del horizonte seleccionado:</label>
     <div class="range-wrapper">
-      <input type="range" id="subrangeStart" min="0" max="100" value="0" step="1">
+      <input type="range" id="subrangeStart" min="0" max="100" value="0"   step="1">
       <input type="range" id="subrangeEnd"   min="0" max="100" value="100" step="1">
     </div>
-    <div style="font-size: 12px; color:#666; margin-top: 28px;">
+    <div style="font-size:12px;color:#666;margin-top:28px;">
       Desde: <span id="subrangeStartLabel"></span>
-      &nbsp;&nbsp;hasta:&nbsp;
-      <span id="subrangeEndLabel"></span>
+      &nbsp;&nbsp;hasta:&nbsp;<span id="subrangeEndLabel"></span>
     </div>
   </div>
 
@@ -139,9 +136,7 @@
         <h3>Resultados regresión CAPM</h3>
         <table>
           <thead>
-            <tr>
-              <th>Parámetro</th><th>Coeficiente</th><th>Error estándar</th><th>t‑valor</th><th>p‑valor</th>
-            </tr>
+            <tr><th>Parámetro</th><th>Coeficiente</th><th>Error estándar</th><th>t‑valor</th><th>p‑valor</th></tr>
           </thead>
           <tbody>
             <tr>
@@ -156,9 +151,7 @@
             </tr>
           </tbody>
         </table>
-        <p style="font-size:12px;color:#666;margin-top:4px;">
-          R² de la regresión: <span id="r2Text">-</span>
-        </p>
+        <p style="font-size:12px;color:#666;margin-top:4px;">R² de la regresión: <span id="r2Text">-</span></p>
       </div>
       <div class="panel full">
         <h3>Exceso Ri vs Rm</h3>
@@ -173,15 +166,11 @@
       <h3>Datos usados en la regresión</h3>
       <button id="copyBtn">Copiar datos</button>
       <p style="font-size:12px;color:#666;margin-top:4px;margin-bottom:6px;">
-        Formato: Fecha, Rm-Rf, Ri-Rf. Los valores son rendimientos del período seleccionado.
+        Formato: Fecha, Rm‑Rf, Ri‑Rf. Rendimientos del período seleccionado.
       </p>
       <table id="dataTable">
         <thead>
-          <tr>
-            <th style="text-align:left;">Fecha</th>
-            <th>Rm-Rf</th>
-            <th>Ri-Rf</th>
-          </tr>
+          <tr><th style="text-align:left;">Fecha</th><th>Rm‑Rf</th><th>Ri‑Rf</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -190,468 +179,540 @@
 
   <!-- Pestaña 3: Matriz de correlaciones -->
   <div id="tab-correlaciones" class="tab-content">
-    <div class="panel" style="flex:1 1 100%; margin-top:10px;">
+    <div class="panel" style="flex:1 1 100%;margin-top:10px;">
       <h3>Matriz de correlaciones</h3>
       <p style="font-size:12px;color:#666;margin-bottom:8px;">
-        Correlaciones entre todos los activos y SPY (índice), usando el horizonte, frecuencia
-        y subperiodo seleccionados arriba. Valores en tanto por uno, precisión de 4 decimales.
-        Azul = correlación positiva, rojo = negativa.
+        Correlaciones entre todos los activos y SPY, usando el mismo horizonte, frecuencia y
+        subperiodo de la pestaña 1. SPY y el activo seleccionado reutilizan los datos ya
+        descargados; el resto se descarga al pulsar el botón.
+        Valores en tanto por uno, precisión de 4 decimales.
+        <strong>Azul</strong> = correlación positiva fuerte &nbsp;|&nbsp;
+        <strong>Blanco</strong> = nula &nbsp;|&nbsp;
+        <strong>Rojo</strong> = negativa.
       </p>
       <button id="corrBtn">Calcular matriz de correlaciones</button>
       <div id="corrStatus"></div>
-      <div class="corr-scroll">
-        <div id="corrTableDiv"></div>
-      </div>
+      <div class="corr-scroll"><div id="corrTableDiv"></div></div>
     </div>
   </div>
 </div>
 
 <script>
-  let scatterChart    = null;
-  const CORSPROXY     = "https://corsproxy.io/?";
-  let lastDataRows    = [];
-  let globalStart     = null;
-  let globalEnd       = null;
-  let rfPerPeriodGlobal = 0;
+/* ================================================================
+   GLOBALS
+   ================================================================ */
+let scatterChart      = null;
+let lastDataRows      = [];   // { dateKey, rmExcess, riExcess }  — excesos con toda la precisión
+let globalStart       = null; // ms epoch inicio rango efectivo
+let globalEnd         = null; // ms epoch fin   rango efectivo
+let rfPerPeriodGlobal = 0;
 
-  const ALL_TICKERS = [
-    { symbol: "SPY",     label: "SPY"  },
-    { symbol: "AAPL",    label: "AAPL" },
-    { symbol: "AMZN",    label: "AMZN" },
-    { symbol: "BAC",     label: "BAC"  },
-    { symbol: "C",       label: "C"    },
-    { symbol: "COST",    label: "COST" },
-    { symbol: "CVX",     label: "CVX"  },
-    { symbol: "GOOGL",   label: "GOOGL"},
-    { symbol: "JPM",     label: "JPM"  },
-    { symbol: "KO",      label: "KO"   },
-    { symbol: "MCD",     label: "MCD"  },
-    { symbol: "META",    label: "META" },
-    { symbol: "MSFT",    label: "MSFT" },
-    { symbol: "NKE",     label: "NKE"  },
-    { symbol: "NVDA",    label: "NVDA" },
-    { symbol: "PEP",     label: "PEP"  },
-    { symbol: "PG",      label: "PG"   },
-    { symbol: "TSLA",    label: "TSLA" },
-    { symbol: "UNH",     label: "UNH"  },
-    { symbol: "WMT",     label: "WMT"  },
-    { symbol: "XOM",     label: "XOM"  },
-    { symbol: "BTC-USD", label: "BTC"  },
-    { symbol: "GC=F",    label: "Oro"  }
+// Cache de retornos BRUTOS alineados, compartida entre pestañas 1 y 3
+// allRetsCache[symbol] = Map<dateKey:string, ret:number>  (retorno bruto, sin Rf)
+let allRetsCache = {};
+// Parámetros con los que se llenó el caché (para invalidarlo si cambian)
+let cacheParams  = { freq: null, horizon: null };
+
+const CORSPROXY = "https://corsproxy.io/?";
+
+const ALL_TICKERS = [
+  { symbol: "SPY",     label: "SPY"   },
+  { symbol: "AAPL",    label: "AAPL"  },
+  { symbol: "AMZN",    label: "AMZN"  },
+  { symbol: "BAC",     label: "BAC"   },
+  { symbol: "C",       label: "C"     },
+  { symbol: "COST",    label: "COST"  },
+  { symbol: "CVX",     label: "CVX"   },
+  { symbol: "GOOGL",   label: "GOOGL" },
+  { symbol: "JPM",     label: "JPM"   },
+  { symbol: "KO",      label: "KO"    },
+  { symbol: "MCD",     label: "MCD"   },
+  { symbol: "META",    label: "META"  },
+  { symbol: "MSFT",    label: "MSFT"  },
+  { symbol: "NKE",     label: "NKE"   },
+  { symbol: "NVDA",    label: "NVDA"  },
+  { symbol: "PEP",     label: "PEP"   },
+  { symbol: "PG",      label: "PG"    },
+  { symbol: "TSLA",    label: "TSLA"  },
+  { symbol: "UNH",     label: "UNH"   },
+  { symbol: "WMT",     label: "WMT"   },
+  { symbol: "XOM",     label: "XOM"   },
+  { symbol: "BTC-USD", label: "BTC"   },
+  { symbol: "GC=F",    label: "Oro"   }
+];
+
+/* ================================================================
+   UTILIDADES DE FECHA  (hora local para evitar desfases UTC)
+   ================================================================ */
+function toDateKey(d) {
+  return d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0');
+}
+
+function yearsAgoTimestamp(n) {
+  const now = new Date(), past = new Date();
+  past.setFullYear(now.getFullYear() - n);
+  return Math.floor(past.getTime() / 1000);
+}
+function nowTimestamp() { return Math.floor(Date.now() / 1000); }
+
+/* ================================================================
+   FORMATEO  (solo para presentación, nunca para cálculo)
+   ================================================================ */
+function formatNumEs(x, dec = 4) {
+  if (!isFinite(x)) return "-";
+  return x.toFixed(dec).replace(".", ",");
+}
+function formatNum(x, dec = 4) {
+  return isFinite(x) ? x.toFixed(dec) : "-";
+}
+
+/* ================================================================
+   DESCARGA DE PRECIOS
+   ================================================================ */
+async function fetchYahooPrices(symbol, nYears, interval) {
+  const p2  = nowTimestamp();
+  const p1  = yearsAgoTimestamp(nYears);
+  const url = CORSPROXY + encodeURIComponent(
+    "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol +
+    "?period1=" + p1 + "&period2=" + p2 +
+    "&interval=" + interval + "&includeAdjustedClose=true"
+  );
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error("Error HTTP " + resp.status + " para " + symbol);
+  const data   = await resp.json();
+  const result = data.chart?.result?.[0];
+  if (!result) throw new Error("Respuesta inválida para " + symbol);
+  const { timestamp, indicators } = result;
+  if (!timestamp || !indicators?.quote?.[0]) throw new Error("Datos incompletos para " + symbol);
+  const closes = indicators.quote[0].adjclose || indicators.quote[0].close;
+  if (!closes) throw new Error("Sin precios para " + symbol);
+  const prices = [];
+  for (let i = 0; i < timestamp.length; i++) {
+    const c = closes[i];
+    if (c == null || c === 0) continue;
+    prices.push({ date: new Date(timestamp[i] * 1000), close: c });
+  }
+  prices.sort((a, b) => a.date - b.date);
+  return prices;
+}
+
+/* ================================================================
+   RETORNOS BRUTOS  →  Map<dateKey, ret>
+   ================================================================ */
+function pricestoRetMap(prices) {
+  const m = new Map();
+  for (let i = 1; i < prices.length; i++) {
+    const p0 = prices[i-1].close, p1 = prices[i].close;
+    if (p0 === 0 || p1 === 0) continue;
+    m.set(toDateKey(prices[i].date), (p1 / p0) - 1);
+  }
+  return m;
+}
+
+/* ================================================================
+   ESTADÍSTICAS
+   ================================================================ */
+function mean(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+
+function pearsonCorr(x, y) {
+  const n = x.length;
+  if (n < 3) return NaN;
+  const mx = mean(x), my = mean(y);
+  let num = 0, dx2 = 0, dy2 = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx, dy = y[i] - my;
+    num += dx * dy; dx2 += dx * dx; dy2 += dy * dy;
+  }
+  const denom = Math.sqrt(dx2 * dy2);
+  return denom === 0 ? NaN : num / denom;
+}
+
+function capmRegression(excessAsset, excessMarket) {
+  const points = excessMarket.map((x, i) => [x, excessAsset[i]]);
+  const reg    = regression.linear(points, { precision: 10 });
+  const beta   = reg.equation[0], alpha = reg.equation[1];
+  const x = excessMarket, y = excessAsset, n = x.length;
+  const yHat  = x.map(xi => alpha + beta * xi);
+  const yMean = mean(y);
+  let ssRes = 0, ssTot = 0;
+  for (let i = 0; i < n; i++) {
+    ssRes += (y[i] - yHat[i]) ** 2;
+    ssTot += (y[i] - yMean)  ** 2;
+  }
+  const r2 = 1 - ssRes / ssTot;
+  const s2 = ssRes / (n - 2);
+  const xMean = mean(x);
+  let sxx = 0;
+  for (let i = 0; i < n; i++) sxx += (x[i] - xMean) ** 2;
+  const seBeta  = Math.sqrt(s2 / sxx);
+  const seAlpha = Math.sqrt(s2 * (1/n + xMean * xMean / sxx));
+  return { alpha, beta, r2, seAlpha, seBeta,
+           tAlpha: alpha / seAlpha, tBeta: beta / seBeta, points };
+}
+
+function normalCdf(z) {
+  const t    = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d    = 0.3989423 * Math.exp(-z * z / 2);
+  const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - prob : prob;
+}
+function pValueFromT(t) { return 2 * (1 - normalCdf(Math.abs(t))); }
+
+/* ================================================================
+   GRÁFICO SCATTER
+   ================================================================ */
+function plotScatter(points) {
+  const ctx = document.getElementById("scatterChart").getContext("2d");
+  if (scatterChart) scatterChart.destroy();
+  const xs = points.map(p => p[0]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const reg  = regression.linear(points);
+  const line = [
+    { x: minX, y: reg.predict(minX)[1] },
+    { x: maxX, y: reg.predict(maxX)[1] }
   ];
-
-  function yearsAgoTimestamp(nYears) {
-    const now = new Date(), past = new Date();
-    past.setFullYear(now.getFullYear() - nYears);
-    return Math.floor(past.getTime() / 1000);
-  }
-  function nowTimestamp() { return Math.floor(Date.now() / 1000); }
-  function getInterval(freqValue) { return freqValue; }
-
-  function formatNumEs(x, dec = 4) {
-    if (!isFinite(x)) return "-";
-    return x.toFixed(dec).replace(".", ",");
-  }
-  function formatNum(x, dec = 4) { return isFinite(x) ? x.toFixed(dec) : "-"; }
-
-  async function fetchYahooPrices(symbol, nYears, interval) {
-    const period2 = nowTimestamp();
-    const period1 = yearsAgoTimestamp(nYears);
-    const url = CORSPROXY + encodeURIComponent(
-      "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol +
-      "?period1=" + period1 + "&period2=" + period2 +
-      "&interval=" + interval + "&includeAdjustedClose=true"
-    );
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error("Error HTTP " + resp.status + " para " + symbol);
-    const data = await resp.json();
-    const result = data.chart?.result?.[0];
-    if (!result) throw new Error("Respuesta inválida para " + symbol);
-    const timestamps = result.timestamp;
-    const ind = result.indicators;
-    if (!timestamps || !ind || !ind.quote || !ind.quote[0]) throw new Error("Datos incompletos para " + symbol);
-    const quote  = ind.quote[0];
-    const closes = quote.adjclose || quote.close;
-    if (!closes) throw new Error("Sin precios para " + symbol);
-    const prices = [];
-    for (let i = 0; i < timestamps.length; i++) {
-      const c = closes[i];
-      if (c == null || c === 0) continue;
-      prices.push({ date: new Date(timestamps[i] * 1000), close: c });
-    }
-    prices.sort((a, b) => a.date - b.date);
-    return prices;
-  }
-
-  function returnsFromPrices(prices) {
-    const rets = [];
-    for (let i = 1; i < prices.length; i++) {
-      const p0 = prices[i-1].close, p1 = prices[i].close;
-      if (p0 === 0 || p1 === 0) continue;
-      // Normaliza a YYYY-MM-DD en hora local para evitar desfases UTC
-      const d = prices[i].date;
-      const dateKey = d.getFullYear() + '-'
-        + String(d.getMonth() + 1).padStart(2, '0') + '-'
-        + String(d.getDate()).padStart(2, '0');
-      rets.push({ date: prices[i].date, dateKey, ret: (p1 / p0) - 1 });
-    }
-    return rets;
-  }
-
-
-  function mean(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
-
-  function pearsonCorr(x, y) {
-    const n = x.length;
-    if (n < 3) return NaN;
-    const mx = mean(x), my = mean(y);
-    let num = 0, dx2 = 0, dy2 = 0;
-    for (let i = 0; i < n; i++) {
-      const dx = x[i] - mx, dy = y[i] - my;
-      num += dx * dy;
-      dx2 += dx * dx;
-      dy2 += dy * dy;
-    }
-    const denom = Math.sqrt(dx2 * dy2);
-    return denom === 0 ? NaN : num / denom;
-  }
-
-  function capmRegression(excessAsset, excessMarket) {
-    const points = excessMarket.map((x, i) => [x, excessAsset[i]]);
-    const reg    = regression.linear(points, { precision: 10 });
-    const beta   = reg.equation[0];
-    const alpha  = reg.equation[1];
-    const x = excessMarket, y = excessAsset, n = x.length;
-    const yHat  = x.map(xi => alpha + beta * xi);
-    const yMean = mean(y);
-    let ssRes = 0, ssTot = 0;
-    for (let i = 0; i < n; i++) {
-      ssRes += (y[i] - yHat[i]) ** 2;
-      ssTot += (y[i] - yMean) ** 2;
-    }
-    const r2    = 1 - ssRes / ssTot;
-    const s2    = ssRes / (n - 2);
-    const xMean = mean(x);
-    let sxx = 0;
-    for (let i = 0; i < n; i++) sxx += (x[i] - xMean) ** 2;
-    const seBeta  = Math.sqrt(s2 / sxx);
-    const seAlpha = Math.sqrt(s2 * (1/n + xMean * xMean / sxx));
-    return { alpha, beta, r2, seAlpha, seBeta, tAlpha: alpha/seAlpha, tBeta: beta/seBeta, points };
-  }
-
-  function normalCdf(z) {
-    const t    = 1 / (1 + 0.2316419 * Math.abs(z));
-    const d    = 0.3989423 * Math.exp(-z * z / 2);
-    const prob = d * (t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))));
-    return z > 0 ? 1 - prob : prob;
-  }
-  function pValueFromT(t) { return 2 * (1 - normalCdf(Math.abs(t))); }
-
-  function plotScatter(points) {
-    const ctx = document.getElementById("scatterChart").getContext("2d");
-    if (scatterChart) scatterChart.destroy();
-    const xs   = points.map(p => p[0]);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const reg  = regression.linear(points);
-    const line = [
-      { x: minX, y: reg.predict(minX)[1] },
-      { x: maxX, y: reg.predict(maxX)[1] }
-    ];
-    scatterChart = new Chart(ctx, {
-      type: "scatter",
-      data: {
-        datasets: [
-          { label: "Observaciones (Rm-Rf, Ri-Rf)", data: points.map(p => ({x:p[0],y:p[1]})), backgroundColor: "rgba(54,162,235,0.7)", pointRadius: 3 },
-          { type: "line", label: "Recta CAPM", data: line, borderColor: "rgba(255,99,132,0.95)", pointRadius: 0, borderWidth: 2 }
-        ]
+  scatterChart = new Chart(ctx, {
+    type: "scatter",
+    data: {
+      datasets: [
+        { label: "Observaciones (Rm‑Rf, Ri‑Rf)",
+          data: points.map(p => ({ x: p[0], y: p[1] })),
+          backgroundColor: "rgba(54,162,235,0.7)", pointRadius: 3 },
+        { type: "line", label: "Recta CAPM", data: line,
+          borderColor: "rgba(255,99,132,0.95)", pointRadius: 0, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        tooltip: { callbacks: {
+          label: ctx => `Rm‑Rf: ${(ctx.raw.x*100).toFixed(4)}%,  Ri‑Rf: ${(ctx.raw.y*100).toFixed(4)}%`
+        }}
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "top" },
-          tooltip: { callbacks: { label: ctx => `Rm-Rf: ${(ctx.raw.x*100).toFixed(4)}%, Ri-Rf: ${(ctx.raw.y*100).toFixed(4)}%` } }
-        },
-        scales: {
-          x: { title: { display: true, text: "Exceso mercado (Rm - Rf)" } },
-          y: { title: { display: true, text: "Exceso activo (Ri - Rf)" } }
-        }
-      }
-    });
-  }
-
-  function setStatus(msg, isError = false) {
-    const el = document.getElementById("status");
-    el.textContent = msg;
-    el.className   = "status " + (isError ? "error" : "success");
-  }
-
-  function fillDataTable() {
-    const tbody = document.querySelector("#dataTable tbody");
-    tbody.innerHTML = "";
-    lastDataRows.forEach(row => {
-      const tr = document.createElement("tr");
-      const tdDate = document.createElement("td");
-      const tdRm   = document.createElement("td");
-      const tdRi   = document.createElement("td");
-      tdDate.style.textAlign = "left";
-      tdDate.textContent = row.date;
-      tdRm.textContent   = formatNumEs(row.rmExcess, 10);
-      tdRi.textContent   = formatNumEs(row.riExcess, 10);
-      tr.appendChild(tdDate); tr.appendChild(tdRm); tr.appendChild(tdRi);
-      tbody.appendChild(tr);
-    });
-  }
-
-  async function copyDataToClipboard() {
-    if (!lastDataRows.length) return;
-    let text = "Fecha\tRm-Rf\tRi-Rf\n";
-    lastDataRows.forEach(row => {
-      text += row.date + "\t" + formatNumEs(row.rmExcess, 10) + "\t" + formatNumEs(row.riExcess, 10) + "\n";
-    });
-    try { await navigator.clipboard.writeText(text); alert("Datos copiados al portapapeles."); }
-    catch (e) { alert("No se han podido copiar los datos (permiso del navegador)."); }
-  }
-
-  // ---- runCAPM ----
-  async function runCAPM() {
-    const ticker   = document.getElementById("tickerSelect").value;
-    const freq     = document.getElementById("freqSelect").value;
-    const horizon  = parseInt(document.getElementById("horizonSelect").value, 10);
-    const rfAnnual = parseFloat(document.getElementById("rfInput").value) / 100;
-    const interval = getInterval(freq);
-    let perYear;
-    if (freq === "1d") perYear = 252;
-    else if (freq === "1wk") perYear = 52;
-    else perYear = 12;
-    const rfPerPeriod = Math.pow(1 + rfAnnual, 1 / perYear) - 1;
-    rfPerPeriodGlobal = rfPerPeriod;
-    setStatus("Descargando datos de Yahoo Finance...", false);
-    const resultsDiv = document.getElementById("resultsDiv");
-    resultsDiv.style.display = "none";
-    lastDataRows = [];
-    try {
-      const [assetPrices, marketPrices] = await Promise.all([
-        fetchYahooPrices(ticker, horizon, interval),
-        fetchYahooPrices("SPY", horizon, interval)
-      ]);
-      const minLen = Math.min(assetPrices.length, marketPrices.length);
-      if (minLen < 3) { setStatus("No hay suficientes datos para ese horizonte/frecuencia.", true); return; }
-      const assetRetsAll  = returnsFromPrices(assetPrices.slice(0, minLen));
-      const marketRetsAll = returnsFromPrices(marketPrices.slice(0, minLen));
-      const nObsAll = Math.min(assetRetsAll.length, marketRetsAll.length);
-      if (nObsAll < 3) { setStatus("No hay suficientes rendimientos para ese horizonte/frecuencia.", true); return; }
-
-      const startDate = assetRetsAll[0].date < marketRetsAll[0].date ? marketRetsAll[0].date : assetRetsAll[0].date;
-      const endDate   = assetRetsAll[nObsAll-1].date > marketRetsAll[nObsAll-1].date ? marketRetsAll[nObsAll-1].date : assetRetsAll[nObsAll-1].date;
-      globalStart = startDate.getTime();
-      globalEnd   = endDate.getTime();
-
-      const subDiv   = document.getElementById("subrangeContainer");
-      const subStart = document.getElementById("subrangeStart");
-      const subEnd   = document.getElementById("subrangeEnd");
-      subDiv.style.display = "block";
-      subStart.value = 0;
-      subEnd.value   = 100;
-
-      function updateSubrangeLabels() {
-        let s = parseInt(subStart.value, 10);
-        let e = parseInt(subEnd.value, 10);
-        if (s > e) { const tmp=s; s=e; e=tmp; subStart.value=s; subEnd.value=e; }
-        const tStart = globalStart + (globalEnd - globalStart) * (s / 100);
-        const tEnd   = globalStart + (globalEnd - globalStart) * (e / 100);
-        document.getElementById("subrangeStartLabel").textContent = new Date(tStart).toISOString().slice(0, 10);
-        document.getElementById("subrangeEndLabel").textContent   = new Date(tEnd).toISOString().slice(0, 10);
-        document.getElementById("subrangeEnd").style.setProperty("--val-start", s);
-        document.getElementById("subrangeEnd").style.setProperty("--val-end", e);
-      }
-
-      function recomputeCAPMWithSubrange() {
-        let s = parseInt(subStart.value, 10);
-        let e = parseInt(subEnd.value, 10);
-        if (s > e) { const tmp=s; s=e; e=tmp; subStart.value=s; subEnd.value=e; }
-        const tStart = globalStart + (globalEnd - globalStart) * (s / 100);
-        const tEnd   = globalStart + (globalEnd - globalStart) * (e / 100);
-        const assetExcess = [], marketExcess = [];
-        lastDataRows = [];
-        for (let i = 0; i < assetRetsAll.length; i++) {
-          const d = assetRetsAll[i].date;
-          const t = d.getTime();
-          if (t < tStart || t > tEnd) continue;
-          const ri = assetRetsAll[i].ret;
-          const rm = marketRetsAll[i].ret;
-          assetExcess.push(ri - rfPerPeriodGlobal);
-          marketExcess.push(rm - rfPerPeriodGlobal);
-          lastDataRows.push({ date: assetRetsAll[i].dateKey, rmExcess: rm - rfPerPeriodGlobal, riExcess: ri - rfPerPeriodGlobal });
-        }
-        const nObs = assetExcess.length;
-        if (nObs < 3) { setStatus("Aviso: subperiodo con muy pocas observaciones (" + nObs + ").", true); return; }
-        if (nObs < 40) setStatus("Aviso: pocas observaciones en el subperiodo (" + nObs + "). Resultados poco robustos.", true);
-        else           setStatus("CAPM calculado para el subperiodo seleccionado (" + nObs + " observaciones).", false);
-        const reg = capmRegression(assetExcess, marketExcess);
-        document.getElementById("alphaCoefCell").textContent = formatNum(reg.alpha);
-        document.getElementById("alphaSeCell").textContent   = formatNum(reg.seAlpha);
-        document.getElementById("alphaTCell").textContent    = formatNum(reg.tAlpha, 4);
-        document.getElementById("alphaSigCell").textContent  = formatNum(pValueFromT(reg.tAlpha), 4);
-        document.getElementById("betaCoefCell").textContent  = formatNum(reg.beta);
-        document.getElementById("betaSeCell").textContent    = formatNum(reg.seBeta);
-        document.getElementById("betaTCell").textContent     = formatNum(reg.tBeta, 4);
-        document.getElementById("betaSigCell").textContent   = formatNum(pValueFromT(reg.tBeta), 4);
-        document.getElementById("r2Text").textContent        = formatNum(reg.r2, 4);
-        plotScatter(reg.points);
-        fillDataTable();
-        resultsDiv.style.display = "flex";
-      }
-
-      updateSubrangeLabels();
-      subStart.oninput = subEnd.oninput = function () {
-        updateSubrangeLabels();
-        recomputeCAPMWithSubrange();
-      };
-      recomputeCAPMWithSubrange();
-      const freqLabel = freq === "1d" ? "diarios" : (freq === "1wk" ? "semanales" : "mensuales");
-      setStatus("CAPM calculado para " + ticker + " vs SPY con rendimientos " + freqLabel + " en los últimos " + horizon + " años.", false);
-    } catch (err) {
-      console.error(err);
-      setStatus("Error: " + err.message, true);
-    }
-  }
-
-  // ---- Colores para la matriz ----
-  function corrBg(r) {
-    if (!isFinite(r)) return "#eee";
-    const v = Math.min(Math.abs(r), 1);
-    const intensity = Math.round(v * 200);
-    return r >= 0
-      ? `rgb(${255 - intensity}, ${255 - intensity}, 255)`
-      : `rgb(255, ${255 - intensity}, ${255 - intensity})`;
-  }
-  function corrFg(r) { return Math.abs(r) > 0.55 ? "#fff" : "#333"; }
-
-  // ---- Calcular matriz de correlaciones ----
-  async function calcCorr() {
-    const freq     = document.getElementById("freqSelect").value;
-    const horizon  = parseInt(document.getElementById("horizonSelect").value, 10);
-    const interval = getInterval(freq);
-    const rfAnnual = parseFloat(document.getElementById("rfInput").value) / 100;
-
-    let perYear;
-    if (freq === "1d") perYear = 252;
-    else if (freq === "1wk") perYear = 52;
-    else perYear = 12;
-
-    const rfPerPeriod = Math.pow(1 + rfAnnual, 1 / perYear) - 1; // Rf del periodo
-    
-    const sVal = parseInt(document.getElementById("subrangeStart").value, 10);
-    const eVal = parseInt(document.getElementById("subrangeEnd").value, 10);
-    const s = Math.min(sVal, eVal);
-    const e = Math.max(sVal, eVal);
-
-    const corrStatus   = document.getElementById("corrStatus");
-    const corrTableDiv = document.getElementById("corrTableDiv");
-    corrTableDiv.innerHTML = "";
-    corrStatus.textContent = "Descargando datos para todos los activos...";
-
-    // Descargar en grupos de 5 para no saturar el proxy
-    const allPrices = {};
-    const symbols   = ALL_TICKERS.map(t => t.symbol);
-    const batchSize = 5;
-    for (let i = 0; i < symbols.length; i += batchSize) {
-      const batch   = symbols.slice(i, i + batchSize);
-      const results = await Promise.all(batch.map(sym => fetchYahooPrices(sym, horizon, interval).catch(() => null)));
-      batch.forEach((sym, j) => { allPrices[sym] = results[j]; });
-      corrStatus.textContent = `Descargados ${Math.min(i + batchSize, symbols.length)} / ${symbols.length} activos...`;
-    }
-
-    // Construir mapas de rendimiento por fecha
-    const allRets = {};
-    let refStart = null, refEnd = null;
-    for (const { symbol } of ALL_TICKERS) {
-      const prices = allPrices[symbol];
-      if (!prices || prices.length < 2) { allRets[symbol] = new Map(); continue; }
-      const rets = returnsFromPrices(prices);
-      const m    = new Map();
-      rets.forEach(r => m.set(r.dateKey, r.ret - rfPerPeriod));
-      allRets[symbol] = m;
-      if (symbol === "SPY" && rets.length > 0) {
-        refStart = rets[0].date.getTime();
-        refEnd   = rets[rets.length - 1].date.getTime();
+      scales: {
+        x: { title: { display: true, text: "Exceso mercado (Rm − Rf)" } },
+        y: { title: { display: true, text: "Exceso activo (Ri − Rf)"  } }
       }
     }
-
-    // Fallback al rango del CAPM si SPY falló
-    if (refStart === null && globalStart !== null) { refStart = globalStart; refEnd = globalEnd; }
-
-    // Aplicar subrango del slider
-    const tStart = refStart !== null ? refStart + (refEnd - refStart) * (s / 100) : null;
-    const tEnd   = refStart !== null ? refStart + (refEnd - refStart) * (e / 100) : null;
-
-    // Filtrar cada activo al subperiodo
-    const filteredRets = {};
-    for (const { symbol } of ALL_TICKERS) {
-      const filtered = new Map();
-      for (const [dateStr, ret] of allRets[symbol].entries()) {
-        if (tStart === null) { filtered.set(dateStr, ret); continue; }
-        const t = new Date(dateStr).getTime();
-        if (t >= tStart && t <= tEnd) filtered.set(dateStr, ret);
-      }
-      filteredRets[symbol] = filtered;
-    }
-
-    // Calcular correlaciones pairwise con alineación por fecha
-    const n = ALL_TICKERS.length;
-    const corrMatrix = Array.from({ length: n }, () => new Array(n).fill(NaN));
-    for (let i = 0; i < n; i++) {
-      for (let j = i; j < n; j++) {
-        if (i === j) { corrMatrix[i][j] = 1; continue; }
-        const mA = filteredRets[ALL_TICKERS[i].symbol];
-        const mB = filteredRets[ALL_TICKERS[j].symbol];
-        const commonDates = [...mA.keys()].filter(d => mB.has(d));
-        const xArr = commonDates.map(d => mA.get(d));
-        const yArr = commonDates.map(d => mB.get(d));
-        const r    = pearsonCorr(xArr, yArr);
-        corrMatrix[i][j] = r;
-        corrMatrix[j][i] = r;
-      }
-    }
-
-    // Renderizar tabla HTML
-    const labels = ALL_TICKERS.map(t => t.label);
-    let html = '<table class="corr-table"><thead><tr><th></th>';
-    labels.forEach(l => { html += `<th>${l}</th>`; });
-    html += '</tr></thead><tbody>';
-    for (let i = 0; i < n; i++) {
-      html += `<tr><td class="row-header">${labels[i]}</td>`;
-      for (let j = 0; j < n; j++) {
-        const r   = corrMatrix[i][j];
-        const bg  = corrBg(r);
-        const fg  = corrFg(r);
-        const val = isFinite(r) ? r.toFixed(4) : "—";
-        html += `<td style="background:${bg};color:${fg};">${val}</td>`;
-      }
-      html += '</tr>';
-    }
-    html += '</tbody></table>';
-    corrTableDiv.innerHTML = html;
-
-    const freqLabel = freq === "1d" ? "diarios" : (freq === "1wk" ? "semanales" : "mensuales");
-    const desde = tStart ? new Date(tStart).toISOString().slice(0,10) : "—";
-    const hasta = tEnd   ? new Date(tEnd).toISOString().slice(0,10)   : "—";
-    corrStatus.textContent = `Matriz calculada · rendimientos ${freqLabel} · subperiodo: ${desde} — ${hasta}`;
-  }
-
-  // ---- Eventos ----
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById(btn.dataset.tab).classList.add("active");
-    });
   });
+}
 
-  document.getElementById("calcBtn").addEventListener("click", runCAPM);
-  document.getElementById("copyBtn").addEventListener("click", copyDataToClipboard);
-  document.getElementById("corrBtn").addEventListener("click", calcCorr);
+/* ================================================================
+   TABLA DATOS USADOS
+   ================================================================ */
+function fillDataTable() {
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  lastDataRows.forEach(row => {
+    const tr = document.createElement("tr");
+    ["date", "rmExcess", "riExcess"].forEach((k, i) => {
+      const td = document.createElement("td");
+      if (i === 0) { td.style.textAlign = "left"; td.textContent = row[k]; }
+      else         { td.textContent = formatNumEs(row[k], 10); }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+async function copyDataToClipboard() {
+  if (!lastDataRows.length) return;
+  let text = "Fecha\tRm-Rf\tRi-Rf\n";
+  lastDataRows.forEach(r => {
+    text += r.date + "\t" + formatNumEs(r.rmExcess, 10) + "\t" + formatNumEs(r.riExcess, 10) + "\n";
+  });
+  try   { await navigator.clipboard.writeText(text); alert("Datos copiados al portapapeles."); }
+  catch { alert("No se han podido copiar los datos (permiso del navegador)."); }
+}
+
+/* ================================================================
+   STATUS
+   ================================================================ */
+function setStatus(msg, isError = false) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className   = "status " + (isError ? "error" : "success");
+}
+
+/* ================================================================
+   rfPerPeriod  desde los controles
+   ================================================================ */
+function getRfPerPeriod() {
+  const freq     = document.getElementById("freqSelect").value;
+  const rfAnnual = parseFloat(document.getElementById("rfInput").value) / 100;
+  const perYear  = freq === "1d" ? 252 : freq === "1wk" ? 52 : 12;
+  return Math.pow(1 + rfAnnual, 1 / perYear) - 1;
+}
+
+/* ================================================================
+   runCAPM  — pestaña 1
+   Descarga SPY + activo, puebla el caché y calcula la regresión.
+   ================================================================ */
+async function runCAPM() {
+  const ticker   = document.getElementById("tickerSelect").value;
+  const freq     = document.getElementById("freqSelect").value;
+  const horizon  = parseInt(document.getElementById("horizonSelect").value, 10);
+  const interval = freq;
+  const rfPerPeriod = getRfPerPeriod();
+  rfPerPeriodGlobal = rfPerPeriod;
+
+  setStatus("Descargando datos de Yahoo Finance...", false);
+  document.getElementById("resultsDiv").style.display = "none";
+  lastDataRows = [];
+
+  // Invalidar caché si cambiaron freq u horizon
+  if (cacheParams.freq !== freq || cacheParams.horizon !== horizon) {
+    allRetsCache = {};
+    cacheParams  = { freq, horizon };
+  }
+
+  try {
+    // Descargar SPY y activo solo si no están en caché
+    const needSPY    = !allRetsCache["SPY"];
+    const needTicker = !allRetsCache[ticker];
+    const fetches    = [];
+    if (needSPY)    fetches.push(fetchYahooPrices("SPY",   horizon, interval));
+    if (needTicker) fetches.push(fetchYahooPrices(ticker,  horizon, interval));
+    const results = await Promise.all(fetches);
+    let ri = 0;
+    if (needSPY)    { allRetsCache["SPY"]   = pricestoRetMap(results[ri++]); }
+    if (needTicker) { allRetsCache[ticker]  = pricestoRetMap(results[ri++]); }
+
+    const mapSPY    = allRetsCache["SPY"];
+    const mapTicker = allRetsCache[ticker];
+
+    // Fechas comunes ordenadas
+    const commonDates = [...mapSPY.keys()]
+      .filter(d => mapTicker.has(d))
+      .sort();
+
+    if (commonDates.length < 3) {
+      setStatus("No hay suficientes datos para ese horizonte/frecuencia.", true);
+      return;
+    }
+
+    // Rango temporal
+    globalStart = new Date(commonDates[0]).getTime();
+    globalEnd   = new Date(commonDates[commonDates.length - 1]).getTime();
+
+    // Mostrar slider
+    const subDiv   = document.getElementById("subrangeContainer");
+    const subStart = document.getElementById("subrangeStart");
+    const subEnd   = document.getElementById("subrangeEnd");
+    subDiv.style.display = "block";
+    subStart.value = 0;
+    subEnd.value   = 100;
+
+    function updateSubrangeLabels() {
+      let s = +subStart.value, e = +subEnd.value;
+      if (s > e) { [s, e] = [e, s]; subStart.value = s; subEnd.value = e; }
+      const tS = globalStart + (globalEnd - globalStart) * (s / 100);
+      const tE = globalStart + (globalEnd - globalStart) * (e / 100);
+      document.getElementById("subrangeStartLabel").textContent = toDateKey(new Date(tS));
+      document.getElementById("subrangeEndLabel").textContent   = toDateKey(new Date(tE));
+      document.getElementById("subrangeEnd").style.setProperty("--val-start", s);
+      document.getElementById("subrangeEnd").style.setProperty("--val-end",   e);
+    }
+
+    function recomputeCAPM() {
+      let s = +subStart.value, e = +subEnd.value;
+      if (s > e) { [s, e] = [e, s]; subStart.value = s; subEnd.value = e; }
+      const tS = globalStart + (globalEnd - globalStart) * (s / 100);
+      const tE = globalStart + (globalEnd - globalStart) * (e / 100);
+
+      const assetExcess = [], marketExcess = [];
+      lastDataRows = [];
+
+      // Iterar sobre las fechas comunes ya ordenadas
+      for (const dk of commonDates) {
+        const t = new Date(dk).getTime();
+        if (t < tS || t > tE) continue;
+        const rm = mapSPY.get(dk);
+        const ri = mapTicker.get(dk);
+        const rmEx = rm - rfPerPeriodGlobal;
+        const riEx = ri - rfPerPeriodGlobal;
+        marketExcess.push(rmEx);
+        assetExcess.push(riEx);
+        lastDataRows.push({ date: dk, rmExcess: rmEx, riExcess: riEx });
+      }
+
+      const nObs = assetExcess.length;
+      if (nObs < 3)  { setStatus("Aviso: subperiodo con muy pocas observaciones (" + nObs + ").", true); return; }
+      if (nObs < 40) setStatus("Aviso: pocas observaciones (" + nObs + "). Resultados poco robustos.", true);
+      else           setStatus("CAPM calculado para el subperiodo (" + nObs + " observaciones).", false);
+
+      const reg = capmRegression(assetExcess, marketExcess);
+      document.getElementById("alphaCoefCell").textContent = formatNum(reg.alpha);
+      document.getElementById("alphaSeCell").textContent   = formatNum(reg.seAlpha);
+      document.getElementById("alphaTCell").textContent    = formatNum(reg.tAlpha,  4);
+      document.getElementById("alphaSigCell").textContent  = formatNum(pValueFromT(reg.tAlpha), 4);
+      document.getElementById("betaCoefCell").textContent  = formatNum(reg.beta);
+      document.getElementById("betaSeCell").textContent    = formatNum(reg.seBeta);
+      document.getElementById("betaTCell").textContent     = formatNum(reg.tBeta,   4);
+      document.getElementById("betaSigCell").textContent   = formatNum(pValueFromT(reg.tBeta),  4);
+      document.getElementById("r2Text").textContent        = formatNum(reg.r2, 4);
+      plotScatter(reg.points);
+      fillDataTable();
+      document.getElementById("resultsDiv").style.display = "flex";
+    }
+
+    updateSubrangeLabels();
+    subStart.oninput = subEnd.oninput = () => { updateSubrangeLabels(); recomputeCAPM(); };
+    recomputeCAPM();
+
+    const freqLabel = freq === "1d" ? "diarios" : freq === "1wk" ? "semanales" : "mensuales";
+    setStatus("CAPM calculado para " + ticker + " vs SPY · rendimientos " + freqLabel + " · últimos " + horizon + " años.", false);
+
+  } catch (err) {
+    console.error(err);
+    setStatus("Error: " + err.message, true);
+  }
+}
+
+/* ================================================================
+   COLORES MATRIZ
+   ================================================================ */
+function corrBg(r) {
+  if (!isFinite(r)) return "#eee";
+  const intensity = Math.round(Math.min(Math.abs(r), 1) * 200);
+  return r >= 0
+    ? `rgb(${255-intensity},${255-intensity},255)`
+    : `rgb(255,${255-intensity},${255-intensity})`;
+}
+function corrFg(r) { return Math.abs(r) > 0.55 ? "#fff" : "#333"; }
+
+/* ================================================================
+   calcCorr  — pestaña 3
+   Reutiliza allRetsCache para los activos ya descargados;
+   descarga solo los que faltan. Aplica el mismo subperiodo
+   que la pestaña 1 y usa la misma rfPerPeriod.
+   ================================================================ */
+async function calcCorr() {
+  const freq      = document.getElementById("freqSelect").value;
+  const horizon   = parseInt(document.getElementById("horizonSelect").value, 10);
+  const interval  = freq;
+  const rfPerPeriod = getRfPerPeriod();
+
+  // Invalidar caché si cambiaron parámetros
+  if (cacheParams.freq !== freq || cacheParams.horizon !== horizon) {
+    allRetsCache = {};
+    cacheParams  = { freq, horizon };
+  }
+
+  const corrStatus   = document.getElementById("corrStatus");
+  const corrTableDiv = document.getElementById("corrTableDiv");
+  corrTableDiv.innerHTML = "";
+
+  // Leer subperiodo del slider (0–100)
+  const s = Math.min(+document.getElementById("subrangeStart").value,
+                     +document.getElementById("subrangeEnd").value);
+  const e = Math.max(+document.getElementById("subrangeStart").value,
+                     +document.getElementById("subrangeEnd").value);
+
+  // Descargar activos que no estén en caché, en grupos de 5
+  const toFetch = ALL_TICKERS.map(t => t.symbol).filter(sym => !allRetsCache[sym]);
+  corrStatus.textContent = toFetch.length > 0
+    ? `Descargando ${toFetch.length} activos pendientes...`
+    : "Todos los datos ya estaban en caché. Calculando...";
+
+  const batchSize = 5;
+  for (let i = 0; i < toFetch.length; i += batchSize) {
+    const batch   = toFetch.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(sym => fetchYahooPrices(sym, horizon, interval).catch(() => null))
+    );
+    batch.forEach((sym, j) => {
+      if (results[j]) allRetsCache[sym] = pricestoRetMap(results[j]);
+    });
+    corrStatus.textContent = `Descargados ${Math.min(i + batchSize, toFetch.length)} / ${toFetch.length} activos pendientes...`;
+  }
+
+  // Rango temporal de referencia (SPY)
+  let refStart = globalStart, refEnd = globalEnd;
+  if (refStart === null && allRetsCache["SPY"]) {
+    const keys = [...allRetsCache["SPY"].keys()].sort();
+    refStart   = new Date(keys[0]).getTime();
+    refEnd     = new Date(keys[keys.length - 1]).getTime();
+  }
+
+  // Aplicar subperiodo
+  const tS = refStart !== null ? refStart + (refEnd - refStart) * (s / 100) : null;
+  const tE = refStart !== null ? refStart + (refEnd - refStart) * (e / 100) : null;
+
+  // Para cada activo: filtrar al subperiodo y restar Rf
+  // Los retornos en caché son BRUTOS; la resta de Rf se hace aquí
+  const filteredRets = {};
+  for (const { symbol } of ALL_TICKERS) {
+    const rawMap = allRetsCache[symbol];
+    if (!rawMap) { filteredRets[symbol] = new Map(); continue; }
+    const m = new Map();
+    for (const [dk, ret] of rawMap.entries()) {
+      if (tS !== null) {
+        const t = new Date(dk).getTime();
+        if (t < tS || t > tE) continue;
+      }
+      m.set(dk, ret - rfPerPeriod);  // exceso de rentabilidad
+    }
+    filteredRets[symbol] = m;
+  }
+
+  // Calcular correlaciones pairwise (por fechas comunes)
+  const n = ALL_TICKERS.length;
+  const corrMatrix = Array.from({ length: n }, () => new Array(n).fill(NaN));
+  for (let i = 0; i < n; i++) {
+    for (let j = i; j < n; j++) {
+      if (i === j) { corrMatrix[i][j] = 1; continue; }
+      const mA = filteredRets[ALL_TICKERS[i].symbol];
+      const mB = filteredRets[ALL_TICKERS[j].symbol];
+      const commonDates = [...mA.keys()].filter(d => mB.has(d));
+      const xArr = commonDates.map(d => mA.get(d));
+      const yArr = commonDates.map(d => mB.get(d));
+      const r    = pearsonCorr(xArr, yArr);
+      corrMatrix[i][j] = r;
+      corrMatrix[j][i] = r;
+    }
+  }
+
+  // Renderizar tabla
+  const labels = ALL_TICKERS.map(t => t.label);
+  let html = '<table class="corr-table"><thead><tr><th></th>';
+  labels.forEach(l => { html += `<th>${l}</th>`; });
+  html += '</tr></thead><tbody>';
+  for (let i = 0; i < n; i++) {
+    html += `<tr><td class="row-header">${labels[i]}</td>`;
+    for (let j = 0; j < n; j++) {
+      const r   = corrMatrix[i][j];
+      const val = isFinite(r) ? r.toFixed(4) : "—";
+      html += `<td style="background:${corrBg(r)};color:${corrFg(r)};">${val}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  corrTableDiv.innerHTML = html;
+
+  const freqLabel = freq === "1d" ? "diarios" : freq === "1wk" ? "semanales" : "mensuales";
+  const desde = tS ? toDateKey(new Date(tS)) : "—";
+  const hasta  = tE ? toDateKey(new Date(tE)) : "—";
+  corrStatus.textContent = `Matriz calculada · rendimientos ${freqLabel} · subperiodo: ${desde} — ${hasta}`;
+}
+
+/* ================================================================
+   EVENTOS
+   ================================================================ */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+document.getElementById("calcBtn").addEventListener("click", runCAPM);
+document.getElementById("copyBtn").addEventListener("click", copyDataToClipboard);
+document.getElementById("corrBtn").addEventListener("click", calcCorr);
 </script>
 </body>
 </html>
