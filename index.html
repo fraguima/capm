@@ -78,6 +78,11 @@
     #totalDataTable { font-size: 11px; }
     #totalDataTable th { text-align: center; }
     #totalDataTable td:first-child { text-align: left; }
+
+    /* ---- Rolling beta ---- */
+    #rollingControls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; padding: 12px 14px; background: #f0f4ff; border: 1px solid #c5d0e6; border-radius: 6px; }
+    #rollingStatus { font-size: 13px; color: #666; margin: 8px 0; }
+    #rollingChartWrap { position: relative; max-width: 100%; }
   </style>
 </head>
 <body>
@@ -85,6 +90,7 @@
   <h1>Modelo de mercado. Estimación mediante regresión</h1>
   <p style="font-size:14px;color:#666;">Finanzas Cuantitativas. &copy; 2026 Francisco Guijarro.</p>
 
+  <!-- Controles globales -->
   <div class="controls">
     <label for="tickerSelect">Activo</label>
     <select id="tickerSelect">
@@ -146,13 +152,14 @@
 
   <!-- Pestañas -->
   <div class="tabs">
-    <button class="tab-btn active" data-tab="tab-resultados">Resultados y gráfico</button>
-    <button class="tab-btn" data-tab="tab-correlaciones">Matriz de correlaciones</button>
-    <button class="tab-btn" data-tab="tab-datos">Datos regresión</button>
-    <button class="tab-btn" data-tab="tab-total">Datos totales</button>
+    <button class="tab-btn active"  data-tab="tab-resultados">Resultados y gráfico</button>
+    <button class="tab-btn"         data-tab="tab-correlaciones">Matriz de correlaciones</button>
+    <button class="tab-btn"         data-tab="tab-rolling">Rolling beta</button>
+    <button class="tab-btn"         data-tab="tab-datos">Datos regresión</button>
+    <button class="tab-btn"         data-tab="tab-total">Datos totales</button>
   </div>
 
-  <!-- Pestaña 1: Resultados -->
+  <!-- =====================  PESTAÑA 1: Resultados  ===================== -->
   <div id="tab-resultados" class="tab-content active">
     <div id="resultsDiv" class="results" style="display:none;">
       <div class="panel" style="flex:1 1 420px;">
@@ -220,7 +227,7 @@
     </div>
   </div>
 
-  <!-- Pestaña 2: Matriz de correlaciones -->
+  <!-- =====================  PESTAÑA 2: Correlaciones  ===================== -->
   <div id="tab-correlaciones" class="tab-content">
     <div class="panel" style="flex:1 1 100%;margin-top:10px;">
       <h3>Matriz de correlaciones</h3>
@@ -236,7 +243,75 @@
     </div>
   </div>
 
-  <!-- Pestaña 3: Datos regresión -->
+  <!-- =====================  PESTAÑA 3: Rolling Beta  ===================== -->
+  <div id="tab-rolling" class="tab-content">
+    <div class="panel" style="flex:1 1 100%;margin-top:10px;">
+      <h3>Rolling beta</h3>
+      <p style="font-size:12px;color:#666;margin-bottom:10px;">
+        Beta móvil calculada con una ventana deslizante de <em>n</em> observaciones consecutivas.
+        Cada punto del gráfico corresponde a la fecha final de la ventana.
+      </p>
+
+      <!-- Controles propios de la pestaña rolling -->
+      <div id="rollingControls">
+        <label for="rollingTickerSelect">Activo</label>
+        <select id="rollingTickerSelect">
+          <option value="AAPL">AAPL Apple</option>
+          <option value="AMZN">AMZN Amazon</option>
+          <option value="BAC">BAC Bank of America</option>
+          <option value="C">C Citigroup</option>
+          <option value="COST">COST Costco</option>
+          <option value="CVX">CVX Chevron</option>
+          <option value="GOOGL">GOOGL Alphabet</option>
+          <option value="JPM">JPM JPMorgan Chase</option>
+          <option value="KO">KO Coca-Cola</option>
+          <option value="MCD">MCD McDonalds</option>
+          <option value="META">META Meta Platforms</option>
+          <option value="MSFT" selected>MSFT Microsoft</option>
+          <option value="NKE">NKE Nike</option>
+          <option value="NVDA">NVDA Nvidia</option>
+          <option value="PEP">PEP PepsiCo</option>
+          <option value="PG">PG Procter &amp; Gamble</option>
+          <option value="TSLA">TSLA Tesla</option>
+          <option value="UNH">UNH UnitedHealth</option>
+          <option value="WMT">WMT Walmart</option>
+          <option value="XOM">XOM Exxon Mobil</option>
+          <option value="BTC-USD">BTC-USD Bitcoin</option>
+          <option value="GC=F">GC=F Oro futuro</option>
+        </select>
+
+        <label for="rollingFreqSelect">Frecuencia</label>
+        <select id="rollingFreqSelect">
+          <option value="1d">Diaria</option>
+          <option value="1wk" selected>Semanal</option>
+          <option value="1mo">Mensual</option>
+        </select>
+
+        <label for="rollingHorizonSelect">Horizonte</label>
+        <select id="rollingHorizonSelect">
+          <option value="1">1 año</option>
+          <option value="3">3 años</option>
+          <option value="5" selected>5 años</option>
+          <option value="10">10 años</option>
+        </select>
+
+        <label for="rollingRfInput">Rf anual (%)</label>
+        <input id="rollingRfInput" type="number" value="4.0" step="0.1" style="width:70px"> %
+
+        <label for="rollingWindowInput">Ventana (nº obs.)</label>
+        <input id="rollingWindowInput" type="number" value="36" min="10" step="1" style="width:70px">
+
+        <button id="rollingCalcBtn">Calcular</button>
+      </div>
+
+      <div id="rollingStatus"></div>
+      <div id="rollingChartWrap">
+        <canvas id="rollingChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================  PESTAÑA 4: Datos regresión  ===================== -->
   <div id="tab-datos" class="tab-content">
     <div id="dataPanel" class="panel">
       <h3>Datos regresión</h3>
@@ -255,7 +330,7 @@
     </div>
   </div>
 
-  <!-- Pestaña 4: Datos totales -->
+  <!-- =====================  PESTAÑA 5: Datos totales  ===================== -->
   <div id="tab-total" class="tab-content">
     <div class="panel" style="flex:1 1 100%;margin-top:10px;">
       <h3>Datos totales</h3>
@@ -264,8 +339,6 @@
         en caché para el horizonte y frecuencia seleccionados, filtrados al subperiodo activo.
         Pulsa "Calcular matriz de correlaciones" para cargar todos los activos si aún no están disponibles.
       </p>
-
-      <!-- Selector de columnas -->
       <div class="col-selector" id="colSelectorDiv">
         <div class="col-sel-title">Columnas a copiar:</div>
         <div class="col-sel-actions">
@@ -275,7 +348,6 @@
         </div>
         <div class="col-checks" id="colChecksDiv"></div>
       </div>
-
       <div class="copy-btn-row">
         <button id="copyTotalBtn">Copiar datos seleccionados</button>
       </div>
@@ -287,13 +359,14 @@
       </div>
     </div>
   </div>
-</div>
+</div><!-- /container -->
 
 <script>
 /* ================================================================
    GLOBALS
 ================================================================ */
 let scatterChart      = null;
+let rollingChart      = null;
 let lastDataRows      = [];
 let globalStart       = null;
 let globalEnd         = null;
@@ -302,38 +375,26 @@ let allRetsCache      = {};
 let cacheParams       = { freq: null, horizon: null };
 let excludedDates     = new Set();
 let fullSubperiodRows = [];
-
-// Datos totales (brutos, sin Rf) para la pestaña 4
-// totalTableData = { symbols: [...], dates: [...], rows: { dateKey -> { sym -> ret } } }
 let totalTableData    = null;
+
+// Caché independiente para rolling (puede usar diferente ticker/freq/horizon)
+let rollingCache      = {};
+let rollingCacheParams = { freq: null, horizon: null };
 
 const CORSPROXY = "https://corsproxy.io/?";
 
-// Orden de columnas para la tabla de datos totales:
-// SPY primero, luego acciones alfabético, luego Oro y BTC al final
 const ALL_TICKERS = [
-  { symbol:"SPY",     label:"SPY"   },
-  { symbol:"AAPL",    label:"AAPL"  },
-  { symbol:"AMZN",    label:"AMZN"  },
-  { symbol:"BAC",     label:"BAC"   },
-  { symbol:"C",       label:"C"     },
-  { symbol:"COST",    label:"COST"  },
-  { symbol:"CVX",     label:"CVX"   },
-  { symbol:"GOOGL",   label:"GOOGL" },
-  { symbol:"JPM",     label:"JPM"   },
-  { symbol:"KO",      label:"KO"    },
-  { symbol:"MCD",     label:"MCD"   },
-  { symbol:"META",    label:"META"  },
-  { symbol:"MSFT",    label:"MSFT"  },
-  { symbol:"NKE",     label:"NKE"   },
-  { symbol:"NVDA",    label:"NVDA"  },
-  { symbol:"PEP",     label:"PEP"   },
-  { symbol:"PG",      label:"PG"    },
-  { symbol:"TSLA",    label:"TSLA"  },
-  { symbol:"UNH",     label:"UNH"   },
-  { symbol:"WMT",     label:"WMT"   },
-  { symbol:"XOM",     label:"XOM"   },
-  { symbol:"GC=F",    label:"Oro"   },
+  { symbol:"SPY",     label:"SPY"   }, { symbol:"AAPL",    label:"AAPL"  },
+  { symbol:"AMZN",    label:"AMZN"  }, { symbol:"BAC",     label:"BAC"   },
+  { symbol:"C",       label:"C"     }, { symbol:"COST",    label:"COST"  },
+  { symbol:"CVX",     label:"CVX"   }, { symbol:"GOOGL",   label:"GOOGL" },
+  { symbol:"JPM",     label:"JPM"   }, { symbol:"KO",      label:"KO"    },
+  { symbol:"MCD",     label:"MCD"   }, { symbol:"META",    label:"META"  },
+  { symbol:"MSFT",    label:"MSFT"  }, { symbol:"NKE",     label:"NKE"   },
+  { symbol:"NVDA",    label:"NVDA"  }, { symbol:"PEP",     label:"PEP"   },
+  { symbol:"PG",      label:"PG"    }, { symbol:"TSLA",    label:"TSLA"  },
+  { symbol:"UNH",     label:"UNH"   }, { symbol:"WMT",     label:"WMT"   },
+  { symbol:"XOM",     label:"XOM"   }, { symbol:"GC=F",    label:"Oro"   },
   { symbol:"BTC-USD", label:"BTC"   }
 ];
 
@@ -351,18 +412,20 @@ function yearsAgoTimestamp(n) {
   return Math.floor(past.getTime() / 1000);
 }
 function nowTimestamp() { return Math.floor(Date.now() / 1000); }
-
 function formatNumEs(x, dec=4) {
   if (!isFinite(x)) return "-";
   return x.toFixed(dec).replace(".", ",");
 }
 function formatNum(x, dec=4) { return isFinite(x) ? x.toFixed(dec) : "-"; }
-
 function getRfPerPeriod() {
   const freq    = document.getElementById("freqSelect").value;
   const rfA     = parseFloat(document.getElementById("rfInput").value) / 100;
   const perYear = freq==="1d" ? 252 : freq==="1wk" ? 52 : 12;
   return Math.pow(1+rfA, 1/perYear) - 1;
+}
+function getRfPerPeriodFrom(freqVal, rfAnnual) {
+  const perYear = freqVal==="1d" ? 252 : freqVal==="1wk" ? 52 : 12;
+  return Math.pow(1 + rfAnnual/100, 1/perYear) - 1;
 }
 
 /* ================================================================
@@ -440,6 +503,18 @@ function capmRegression(excessAsset, excessMarket) {
            tAlpha:alpha/seAlpha, tBeta:beta/seBeta, points };
 }
 
+// Regresión mínima para rolling (solo devuelve beta)
+function rollingBeta(xArr, yArr) {
+  const n=xArr.length;
+  const mx=mean(xArr), my=mean(yArr);
+  let cov=0, varX=0;
+  for (let i=0;i<n;i++) {
+    cov  += (xArr[i]-mx)*(yArr[i]-my);
+    varX += (xArr[i]-mx)**2;
+  }
+  return varX===0 ? NaN : cov/varX;
+}
+
 function normalCdf(z) {
   const t=1/(1+0.2316419*Math.abs(z));
   const d=0.3989423*Math.exp(-z*z/2);
@@ -501,7 +576,7 @@ function updateInflValues(tableId, items) {
 }
 
 /* ================================================================
-   GRÁFICO
+   GRÁFICO SCATTER
 ================================================================ */
 function plotScatter(points) {
   const ctx=document.getElementById("scatterChart").getContext("2d");
@@ -517,28 +592,134 @@ function plotScatter(points) {
       { type:"line", label:"Recta CAPM", data:line, borderColor:"rgba(255,99,132,0.95)", pointRadius:0, borderWidth:2 }
     ]},
     options:{ responsive:true,
-      plugins:{ legend:{position:"top"}, tooltip: {
-  callbacks: {
-    label: c => {
-      if (c.datasetIndex !== 0) return null; // no mostrar tooltip en la recta
-      const idx = c.dataIndex;
-      const fecha = fullSubperiodRows.filter(r => !excludedDates.has(r.dateKey))[idx]?.dateKey ?? "";
-      return [
-        `Fecha:  ${fecha}`,
-        `Rm‑Rf: ${(c.raw.x * 100).toFixed(4)}%`,
-        `Ri‑Rf:  ${(c.raw.y * 100).toFixed(4)}%`
-      ];
-    }
-  }
-}
-},
+      plugins:{ legend:{position:"top"}, tooltip:{callbacks:{label: c => {
+        if (c.datasetIndex!==0) return null;
+        const fecha = fullSubperiodRows.filter(r=>!excludedDates.has(r.dateKey))[c.dataIndex]?.dateKey ?? "";
+        return [`Fecha:  ${fecha}`, `Rm‑Rf: ${(c.raw.x*100).toFixed(4)}%`, `Ri‑Rf:  ${(c.raw.y*100).toFixed(4)}%`];
+      }}}},
       scales:{ x:{title:{display:true,text:"Exceso mercado (Rm − Rf)"}}, y:{title:{display:true,text:"Exceso activo (Ri − Rf)"}} }
     }
   });
 }
 
 /* ================================================================
-   TABLA DATOS REGRESIÓN (pestaña 3)
+   GRÁFICO ROLLING BETA
+================================================================ */
+function plotRollingBeta(labels, betas, ticker, window) {
+  const ctx=document.getElementById("rollingChart").getContext("2d");
+  if (rollingChart) rollingChart.destroy();
+  rollingChart=new Chart(ctx, {
+    type:"line",
+    data:{
+      labels,
+      datasets:[{
+        label:`Beta móvil (ventana ${window})  ·  ${ticker} vs SPY`,
+        data: betas,
+        borderColor:"rgba(54,130,206,0.9)",
+        backgroundColor:"rgba(54,130,206,0.08)",
+        borderWidth:2,
+        pointRadius:2,
+        pointHoverRadius:5,
+        fill:true,
+        tension:0.2
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:"top"},
+        tooltip:{callbacks:{
+          label: c => `Beta: ${isFinite(c.raw) ? c.raw.toFixed(4) : "—"}`
+        }}
+      },
+      scales:{
+        x:{
+          ticks:{ maxTicksLimit:12, maxRotation:45 },
+          title:{display:true, text:"Fecha (fin de ventana)"}
+        },
+        y:{
+          title:{display:true, text:"Beta"},
+          grid:{color:"rgba(0,0,0,0.06)"}
+        }
+      }
+    }
+  });
+}
+
+/* ================================================================
+   ROLLING BETA  — cálculo principal
+================================================================ */
+async function runRollingBeta() {
+  const ticker  = document.getElementById("rollingTickerSelect").value;
+  const freq    = document.getElementById("rollingFreqSelect").value;
+  const horizon = parseInt(document.getElementById("rollingHorizonSelect").value, 10);
+  const rfAnnual= parseFloat(document.getElementById("rollingRfInput").value);
+  const rfPer   = getRfPerPeriodFrom(freq, rfAnnual);
+  const perYear = freq==="1d" ? 252 : freq==="1wk" ? 52 : 12;
+  const maxObs  = horizon * perYear;
+
+  // Validar ventana
+  let w = parseInt(document.getElementById("rollingWindowInput").value, 10);
+  if (isNaN(w) || w < 10) { w = 10; document.getElementById("rollingWindowInput").value = 10; }
+  if (w > maxObs - 1) {
+    w = Math.max(10, maxObs - 1);
+    document.getElementById("rollingWindowInput").value = w;
+  }
+
+  const statusEl = document.getElementById("rollingStatus");
+  statusEl.textContent = "Descargando datos...";
+
+  // Caché independiente del rolling
+  const cacheKey = freq + "|" + horizon;
+  if (rollingCacheParams.freq!==freq || rollingCacheParams.horizon!==horizon) {
+    rollingCache = {};
+    rollingCacheParams = { freq, horizon };
+  }
+
+  try {
+    if (!rollingCache["SPY"])    rollingCache["SPY"]   = pricesToRetMap(await fetchYahooPrices("SPY",   horizon, freq));
+    if (!rollingCache[ticker])   rollingCache[ticker]  = pricesToRetMap(await fetchYahooPrices(ticker,  horizon, freq));
+
+    const mapSPY    = rollingCache["SPY"];
+    const mapTicker = rollingCache[ticker];
+
+    // Fechas comunes ordenadas
+    const commonDates = [...mapSPY.keys()].filter(d=>mapTicker.has(d)).sort();
+    const n = commonDates.length;
+
+    if (n < w + 1) {
+      statusEl.textContent = `No hay suficientes observaciones (${n}) para una ventana de ${w}.`;
+      return;
+    }
+
+    // Construir arrays de excesos alineados
+    const rmArr = commonDates.map(d => mapSPY.get(d)    - rfPer);
+    const riArr = commonDates.map(d => mapTicker.get(d) - rfPer);
+
+    // Calcular rolling beta
+    const rollLabels = [];
+    const rollBetas  = [];
+    for (let i = w - 1; i < n; i++) {
+      const xSlice = rmArr.slice(i - w + 1, i + 1);
+      const ySlice = riArr.slice(i - w + 1, i + 1);
+      rollLabels.push(commonDates[i]);
+      rollBetas.push(rollingBeta(xSlice, ySlice));
+    }
+
+    const freqLabel = freq==="1d" ? "diarios" : freq==="1wk" ? "semanales" : "mensuales";
+    statusEl.textContent =
+      `Rolling beta calculada · ${ticker} vs SPY · rendimientos ${freqLabel} · horizonte ${horizon} años · ventana ${w} obs. · ${rollBetas.length} puntos.`;
+
+    plotRollingBeta(rollLabels, rollBetas, ticker, w);
+
+  } catch(err) {
+    console.error(err);
+    statusEl.textContent = "Error: " + err.message;
+  }
+}
+
+/* ================================================================
+   TABLA DATOS REGRESIÓN
 ================================================================ */
 function fillDataTable() {
   const tbody=document.querySelector("#dataTable tbody");
@@ -558,7 +739,7 @@ function fillDataTable() {
 async function copyDataToClipboard() {
   if (!lastDataRows.length) return;
   let text="Fecha\tRm-Rf\tRi-Rf\n";
-  lastDataRows.forEach(r => {
+  lastDataRows.forEach(r=>{
     text+=r.date+"\t"+formatNumEs(r.rmExcess,10)+"\t"+formatNumEs(r.riExcess,10)+"\n";
   });
   try   { await navigator.clipboard.writeText(text); alert("Datos copiados al portapapeles."); }
@@ -566,18 +747,14 @@ async function copyDataToClipboard() {
 }
 
 /* ================================================================
-   TABLA DATOS TOTALES (pestaña 4)
+   TABLA DATOS TOTALES
 ================================================================ */
 function buildTotalTable() {
   if (!totalTableData) return;
   const { symbols, labels, dates, rows } = totalTableData;
-
-  // Cabecera
   const headRow=document.getElementById("totalDataHead");
   headRow.innerHTML="<th style='text-align:left;'>Fecha</th>";
   labels.forEach(l => { headRow.innerHTML+=`<th>${l}</th>`; });
-
-  // Cuerpo
   const tbody=document.getElementById("totalDataBody");
   tbody.innerHTML="";
   dates.forEach(dk => {
@@ -590,15 +767,12 @@ function buildTotalTable() {
     tr.innerHTML=html;
     tbody.appendChild(tr);
   });
-
-  // Checkboxes de columnas
   buildColSelector(labels);
 }
 
 function buildColSelector(labels) {
   const div=document.getElementById("colChecksDiv");
   div.innerHTML="";
-  // Checkbox "Fecha" fijo siempre incluido (no se puede desmarcar)
   const fechaLbl=document.createElement("label");
   fechaLbl.innerHTML=`<input type="checkbox" checked disabled> Fecha`;
   div.appendChild(fechaLbl);
@@ -607,12 +781,10 @@ function buildColSelector(labels) {
     lbl.innerHTML=`<input type="checkbox" checked data-col-idx="${i}" class="col-chk"> ${l}`;
     div.appendChild(lbl);
   });
-  // Lógica "seleccionar todas"
   document.getElementById("chkAllCols").checked=true;
   document.getElementById("chkAllCols").onchange=function() {
     document.querySelectorAll(".col-chk").forEach(c => c.checked=this.checked);
   };
-  // Si el usuario desmarca una individual, desmarcar también "todas"
   div.addEventListener("change", () => {
     const all=[...document.querySelectorAll(".col-chk")];
     document.getElementById("chkAllCols").checked = all.every(c=>c.checked);
@@ -620,17 +792,14 @@ function buildColSelector(labels) {
 }
 
 async function copyTotalData() {
-  if (!totalTableData) { alert("No hay datos cargados. Pulsa primero 'Calcular matriz de correlaciones'."); return; }
+  if (!totalTableData) { alert("No hay datos. Pulsa primero 'Calcular matriz de correlaciones'."); return; }
   const { symbols, labels, dates, rows } = totalTableData;
-
-  // Columnas seleccionadas
   const selectedIdx=[];
   document.querySelectorAll(".col-chk").forEach(c => {
     if (c.checked) selectedIdx.push(parseInt(c.dataset.colIdx));
   });
   const selSymbols = selectedIdx.map(i=>symbols[i]);
   const selLabels  = selectedIdx.map(i=>labels[i]);
-
   let text="Fecha\t"+selLabels.join("\t")+"\n";
   dates.forEach(dk => {
     let line=dk;
@@ -644,11 +813,9 @@ async function copyTotalData() {
   catch { alert("No se han podido copiar los datos (permiso del navegador)."); }
 }
 
-/* Reconstruye totalTableData desde allRetsCache aplicando el subperiodo activo */
 function refreshTotalTableData() {
   const s=Math.min(+document.getElementById("subrangeStart").value, +document.getElementById("subrangeEnd").value);
   const e=Math.max(+document.getElementById("subrangeStart").value, +document.getElementById("subrangeEnd").value);
-
   let refStart=globalStart, refEnd=globalEnd;
   if (refStart===null && allRetsCache["SPY"]) {
     const keys=[...allRetsCache["SPY"].keys()].sort();
@@ -656,13 +823,9 @@ function refreshTotalTableData() {
   }
   const tS=refStart!==null ? refStart+(refEnd-refStart)*(s/100) : null;
   const tE=refStart!==null ? refStart+(refEnd-refStart)*(e/100) : null;
-
-  // Solo activos que estén en caché
   const available=ALL_TICKERS.filter(t=>allRetsCache[t.symbol]);
   const symbols=available.map(t=>t.symbol);
   const labels =available.map(t=>t.label);
-
-  // Unión de todas las fechas disponibles, filtradas al subperiodo
   const dateSet=new Set();
   symbols.forEach(sym => {
     for (const dk of allRetsCache[sym].keys()) {
@@ -671,17 +834,11 @@ function refreshTotalTableData() {
     }
   });
   const dates=[...dateSet].sort();
-
-  // Construir rows
   const rows={};
   dates.forEach(dk => {
     rows[dk]={};
-    symbols.forEach(sym => {
-      const v=allRetsCache[sym].get(dk);
-      if (v!=null) rows[dk][sym]=v;
-    });
+    symbols.forEach(sym => { const v=allRetsCache[sym].get(dk); if (v!=null) rows[dk][sym]=v; });
   });
-
   totalTableData={ symbols, labels, dates, rows };
   buildTotalTable();
 }
@@ -702,7 +859,6 @@ function recalcWithExclusions() {
   if (activeRows.length<3) { setStatus("Aviso: quedan menos de 3 observaciones tras las exclusiones.",true); return; }
   const xArr=activeRows.map(r=>r.rmExcess), yArr=activeRows.map(r=>r.riExcess);
   const reg=capmRegression(yArr, xArr);
-
   document.getElementById("alphaCoefCell").textContent=formatNum(reg.alpha);
   document.getElementById("alphaSeCell").textContent  =formatNum(reg.seAlpha);
   document.getElementById("alphaTCell").textContent   =formatNum(reg.tAlpha,4);
@@ -713,10 +869,8 @@ function recalcWithExclusions() {
   document.getElementById("betaSigCell").textContent  =formatNum(pValueFromT(reg.tBeta),4);
   document.getElementById("r2Text").textContent       =formatNum(reg.r2,4);
   plotScatter(reg.points);
-
   lastDataRows=activeRows.map(r=>({ date:r.dateKey, rmExcess:r.rmExcess, riExcess:r.riExcess }));
   fillDataTable();
-
   const infl=computeInfluential(activeRows, reg.alpha, reg.beta, reg.r2);
   updateInflValues("inflAlphaTable", infl.alpha);
   updateInflValues("inflBetaTable",  infl.beta);
@@ -757,7 +911,6 @@ async function runCAPM() {
     const mapSPY   =allRetsCache["SPY"];
     const mapTicker=allRetsCache[ticker];
     const commonDates=[...mapSPY.keys()].filter(d=>mapTicker.has(d)).sort();
-
     if (commonDates.length<3) { setStatus("No hay suficientes datos.",true); return; }
 
     globalStart=new Date(commonDates[0]).getTime();
@@ -825,7 +978,6 @@ async function runCAPM() {
       document.getElementById("influentialPanel").style.display="block";
       document.getElementById("resultsDiv").style.display="flex";
 
-      // Actualizar también datos totales si ya están cargados
       if (Object.keys(allRetsCache).length>0) refreshTotalTableData();
     }
 
@@ -850,7 +1002,7 @@ function corrBg(r) {
 function corrFg(r) { return Math.abs(r)>0.55?"#fff":"#333"; }
 
 /* ================================================================
-   calcCorr  (también rellena la tabla de datos totales)
+   calcCorr
 ================================================================ */
 async function calcCorr() {
   const freq       =document.getElementById("freqSelect").value;
@@ -933,7 +1085,6 @@ async function calcCorr() {
   const desde=tS?toDateKey(new Date(tS)):"—", hasta=tE?toDateKey(new Date(tE)):"—";
   corrStatus.textContent=`Matriz calculada · rendimientos ${freqLabel} · subperiodo: ${desde} — ${hasta}`;
 
-  // Rellenar también la pestaña Datos totales
   refreshTotalTableData();
 }
 
@@ -946,16 +1097,19 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
-    // Al abrir pestaña datos totales, refrescar si hay datos
     if(btn.dataset.tab==="tab-total" && Object.keys(allRetsCache).length>0) refreshTotalTableData();
   });
 });
+
 document.getElementById("calcBtn").addEventListener("click", runCAPM);
 document.getElementById("copyBtn").addEventListener("click", copyDataToClipboard);
 document.getElementById("corrBtn").addEventListener("click", calcCorr);
 document.getElementById("copyTotalBtn").addEventListener("click", copyTotalData);
+document.getElementById("rollingCalcBtn").addEventListener("click", runRollingBeta);
+
 // Calcular automáticamente al cargar la página con los valores por defecto
-runCAPM();
+runCAPM().then(() => runRollingBeta());
 </script>
 </body>
 </html>
+
